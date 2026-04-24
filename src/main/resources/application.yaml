@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: HiveRH
+  datasource:
+    url: //poner localhost propio
+    username:  //user personal DB
+    password:  //password DB
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+      format_sql: true
