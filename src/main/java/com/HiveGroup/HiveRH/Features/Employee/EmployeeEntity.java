@@ -4,9 +4,11 @@ import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.GenreEnum;
 import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
 import com.HiveGroup.HiveRH.Features.Branch.BranchEntity;
+import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "employee")
@@ -61,5 +63,11 @@ public class EmployeeEntity {
     @OneToOne(optional = true)
     @JoinColumn(name = "id_account", nullable = true)
     private AccountEntity account;
+
+    // Assignment
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EmployeeAssignmentEntity> assignments;
+
+
 
 }
