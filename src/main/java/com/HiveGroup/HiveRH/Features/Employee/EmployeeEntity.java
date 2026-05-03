@@ -4,6 +4,7 @@ import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.GenreEnum;
 import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
 import com.HiveGroup.HiveRH.Features.Branch.BranchEntity;
+import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity;
 import com.HiveGroup.HiveRH.Features.Payroll.PayrollEntity;
 import jakarta.persistence.*;
 
@@ -63,6 +64,12 @@ public class EmployeeEntity {
     @OneToOne(optional = true)
     @JoinColumn(name = "id_account", nullable = true)
     private AccountEntity account;
+
+    // Assignment
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EmployeeAssignmentEntity> assignments;
+
+
 
     @OneToMany(mappedBy = "employee")
     private List<PayrollEntity> payrolls;
