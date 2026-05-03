@@ -5,7 +5,9 @@ import com.HiveGroup.HiveRH.Common.Utils.Enums.GenreEnum;
 import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
 import com.HiveGroup.HiveRH.Features.Branch.BranchEntity;
 import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity;
+import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
 import com.HiveGroup.HiveRH.Features.Payroll.PayrollEntity;
+import com.HiveGroup.HiveRH.Features.Vacation.VacationEntity;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -69,8 +71,12 @@ public class EmployeeEntity {
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EmployeeAssignmentEntity> assignments;
 
-
-
     @OneToMany(mappedBy = "employee")
     private List<PayrollEntity> payrolls;
+
+    @OneToMany(mappedBy = "employee")
+    private List<LicenseEntity> licenses;
+
+    @OneToMany(mappedBy = "employee")
+    private List<VacationEntity> vacations;
 }

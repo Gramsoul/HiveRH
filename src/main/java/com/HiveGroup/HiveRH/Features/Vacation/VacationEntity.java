@@ -1,4 +1,5 @@
-package com.HiveGroup.HiveRH.Features.License;
+package com.HiveGroup.HiveRH.Features.Vacation;
+
 
 import com.HiveGroup.HiveRH.Features.Certificate.Certificate;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
@@ -8,13 +9,13 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Table(name = "license")
-public class LicenseEntity {
+@Table(name = "vacation")
+public class VacationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_license;
+    private Long id_vacation;
 
-    @Column(name = "request_date", nullable = false)
+    @Column (name = "request_date", nullable = false)
     private LocalDate requestDate;
 
     @Column(name = "accepted")
@@ -28,15 +29,6 @@ public class LicenseEntity {
 
     @Column(name = "paid")
     private boolean isPaid;
-
-    @Column(name = "motive", length = 300)
-    private String motive;
-
-    @Column(name = "description", length = 200)
-    private String description;
-
-    @OneToMany(mappedBy = "license")
-    private List<Certificate> certificates;
 
     @ManyToOne
     @JoinColumn(name = "id_employee", nullable = false)
