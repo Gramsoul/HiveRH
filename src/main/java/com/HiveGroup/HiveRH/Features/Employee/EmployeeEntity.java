@@ -5,6 +5,7 @@ import com.HiveGroup.HiveRH.Common.Utils.Enums.GenreEnum;
 import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
 import com.HiveGroup.HiveRH.Features.Branch.BranchEntity;
 import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity;
+import com.HiveGroup.HiveRH.Features.Payroll.PayrollEntity;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -17,10 +18,10 @@ public class EmployeeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id_employee;
 
-    @Column(name = "employee_name", nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(name = "employee_lastname", nullable = false, length = 100)
+    @Column(name = "lastname", nullable = false, length = 100)
     private String lastName;
 
     @Column(name = "phone", nullable = false, length = 100)
@@ -70,4 +71,6 @@ public class EmployeeEntity {
 
 
 
+    @OneToMany(mappedBy = "employee")
+    private List<PayrollEntity> payrolls;
 }
