@@ -10,7 +10,7 @@ import java.util.List;
 public class BranchEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_account;
+    private Long id_branch;
 
     @Column(name = "name", nullable = false, length = 100)
     private String branchName;
