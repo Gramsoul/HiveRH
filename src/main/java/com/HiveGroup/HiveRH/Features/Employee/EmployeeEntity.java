@@ -4,6 +4,7 @@ import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.GenreEnum;
 import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
 import com.HiveGroup.HiveRH.Features.Branch.BranchEntity;
+import com.HiveGroup.HiveRH.Features.Complaint.ComplaintEntity;
 import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity;
 import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
 import com.HiveGroup.HiveRH.Features.Payroll.PayrollEntity;
@@ -79,4 +80,7 @@ public class EmployeeEntity {
 
     @OneToMany(mappedBy = "employee")
     private List<VacationEntity> vacations;
+
+    @OneToMany(mappedBy = "employee")
+    private List<ComplaintEntity> complaints;
 }
