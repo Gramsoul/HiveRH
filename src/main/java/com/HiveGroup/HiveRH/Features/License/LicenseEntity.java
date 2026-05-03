@@ -1,0 +1,44 @@
+package com.HiveGroup.HiveRH.Features.License;
+
+import com.HiveGroup.HiveRH.Features.Certificate.Certificate;
+import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
+import jakarta.persistence.*;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@Entity
+@Table(name = "license")
+public class LicenseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id_license;
+
+    @Column(name = "request", nullable = false)
+    private LocalDate request;
+
+    @Column(name = "accepted")
+    private boolean isAccepted;
+
+    @Column(name = "start_date", nullable = false)
+    private LocalDate startDate;
+
+    @Column(name = "end_date", nullable = false)
+    private LocalDate endDate;
+
+    @Column(name = "paid")
+    private boolean isPaid;
+
+    @Column(name = "motive", length = 300)
+    private String motive;
+
+    @Column(name = "description", length = 200)
+    private String description;
+
+    @OneToMany(mappedBy = "license")
+    private List<Certificate> certificates;
+
+    @ManyToOne
+    @JoinColumn(name = "id_employee", nullable = false)
+    private EmployeeEntity employee;
+}
