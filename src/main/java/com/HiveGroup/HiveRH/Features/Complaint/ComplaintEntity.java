@@ -2,11 +2,17 @@ package com.HiveGroup.HiveRH.Features.Complaint;
 
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "complaint")
+@Getter
+@Setter
+@AllArgsConstructor
+@Builder
+@NoArgsConstructor
 public class ComplaintEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -2,11 +2,17 @@ package com.HiveGroup.HiveRH.Features.Branch;
 
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.List;
 
 @Entity
 @Table(name = "branch")
+@Getter
+@Setter
+@AllArgsConstructor
+@Builder
+@NoArgsConstructor
 public class BranchEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,13 +1,20 @@
 package com.HiveGroup.HiveRH.Features.Payroll;
 
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
+import com.HiveGroup.HiveRH.Features.Varation.PayrollVariationsEntity;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
 @Table(name = "payroll")
+@Getter
+@Setter
+@AllArgsConstructor
+@Builder
+@NoArgsConstructor
 public class PayrollEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

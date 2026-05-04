@@ -3,12 +3,18 @@ package com.HiveGroup.HiveRH.Features.License;
 import com.HiveGroup.HiveRH.Features.Certificate.Certificate;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
 @Table(name = "license")
+@Getter
+@Setter
+@AllArgsConstructor
+@Builder
+@NoArgsConstructor
 public class LicenseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

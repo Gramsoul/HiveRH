@@ -10,12 +10,18 @@ import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
 import com.HiveGroup.HiveRH.Features.Payroll.PayrollEntity;
 import com.HiveGroup.HiveRH.Features.Vacation.VacationEntity;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
 @Table(name = "employee")
+@Getter
+@Setter
+@AllArgsConstructor
+@Builder
+@NoArgsConstructor
 public class EmployeeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

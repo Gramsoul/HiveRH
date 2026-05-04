@@ -4,12 +4,18 @@ package com.HiveGroup.HiveRH.Features.Vacation;
 import com.HiveGroup.HiveRH.Features.Certificate.Certificate;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
 @Table(name = "vacation")
+@Getter
+@Setter
+@AllArgsConstructor
+@Builder
+@NoArgsConstructor
 public class VacationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
