@@ -4,9 +4,14 @@ import com.HiveGroup.HiveRH.Features.Department.DepartmentEntity;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import com.HiveGroup.HiveRH.Features.Position.PositionEntity;
 import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "employee_department_position")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class EmployeeAssignmentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
