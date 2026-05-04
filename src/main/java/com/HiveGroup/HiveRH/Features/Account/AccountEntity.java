@@ -1,5 +1,6 @@
 package com.HiveGroup.HiveRH.Features.Account;
 
+import com.HiveGroup.HiveRH.Common.Utils.Enums.RolEnum;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -24,6 +25,9 @@ public class AccountEntity {
 
     @Column(name = "email", nullable = false, length = 100)
     private String email;
+
+    @Enumerated(EnumType.STRING)
+    private RolEnum rol;
 
     @OneToOne(mappedBy = "account")
     private EmployeeEntity eployee;

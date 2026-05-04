@@ -11,12 +11,13 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
-public class Certificate {
+public class CertificateEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id_certificate;
 
-    @Column(name = "archive", columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "file", columnDefinition = "TEXT")
     private String archive;
 
     @Column(name = "description")
