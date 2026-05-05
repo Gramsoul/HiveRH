@@ -1,7 +1,7 @@
 package com.HiveGroup.HiveRH.Features.Payroll;
 
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
-import com.HiveGroup.HiveRH.Features.Varation.PayrollVariationsEntity;
+import com.HiveGroup.HiveRH.Features.Varation.VariationEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,5 +36,5 @@ public class PayrollEntity {
             joinColumns = @JoinColumn(name = "id_payroll"),
             inverseJoinColumns = @JoinColumn(name = "id_variation")
     )
-    private List<PayrollVariationsEntity> payrollVariations;
+    private List<VariationEntity> payrollVariations;
 }
