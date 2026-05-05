@@ -10,7 +10,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
-public class PayrollVariationsEntity {
+public class VariationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id_variation;
