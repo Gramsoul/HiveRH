@@ -1,6 +1,7 @@
 package com.HiveGroup.HiveRH.Features.Certificate;
 
 import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,13 +17,15 @@ public class CertificateEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id_certificate;
 
-    @Column(name = "file", columnDefinition = "TEXT")
-    private String file;
+    @Lob
+    @Column(name = "file", columnDefinition = "LONGBLOB")
+    private byte[] file;
 
     @Column(name = "description")
     private String description;
 
     @ManyToOne
     @JoinColumn(name = "id_license", nullable = false)
+    @JsonBackReference
     private LicenseEntity license;
 }

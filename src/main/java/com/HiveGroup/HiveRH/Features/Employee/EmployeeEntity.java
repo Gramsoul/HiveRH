@@ -9,6 +9,7 @@ import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity
 import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
 import com.HiveGroup.HiveRH.Features.Payroll.PayrollEntity;
 import com.HiveGroup.HiveRH.Features.Vacation.VacationEntity;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -82,6 +83,7 @@ public class EmployeeEntity {
     private List<PayrollEntity> payrolls;
 
     @OneToMany(mappedBy = "employee")
+    @JsonManagedReference
     private List<LicenseEntity> licenses;
 
     @OneToMany(mappedBy = "employee")
