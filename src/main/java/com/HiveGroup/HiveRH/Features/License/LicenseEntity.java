@@ -44,11 +44,11 @@ public class LicenseEntity {
     private String description;
 
     @OneToMany(mappedBy = "license")
-    @JsonManagedReference
+    //@JsonManagedReference
     private List<CertificateEntity> certificates;
 
     @ManyToOne
     @JoinColumn(name = "id_employee", nullable = false)
-    @JsonBackReference
+    //@JsonBackReference
     private EmployeeEntity employee;
 }

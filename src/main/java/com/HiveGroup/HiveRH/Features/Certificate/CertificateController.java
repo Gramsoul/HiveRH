@@ -36,20 +36,38 @@ public class CertificateController {
     }
 
     @PostMapping("/api/saveCertificate")
-    public ResponseEntity<LicenseEntity> savePDF(@RequestBody @NotNull MultipartFile file) throws IOException {
-        byte[] pdf = pdfLectorService.savePDF(file);
-        LicenseEntity license = licenseRepository.findById((long) 1).get();
-        CertificateEntity certificate = certificateService.createCertificate(pdf, license, "test");
-        license.getCertificates().add(certificate);
+    public ResponseEntity<CertificateDTO> savePDF(@RequestBody @NotNull MultipartFile file) throws IOException {
 
-        certificateRepository.save(certificate);
-        licenseRepository.save(license);
-        return ResponseEntity.ok().body(license);
+        byte[] pdf = pdfLectorService.savePDF(file);
+        LicenseEntity license = licenseRepository.findById((long) 1).orElse(null);
+
+        if (license == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            CertificateEntity certificate = CertificateEntity.builder()
+                    .description("Test description")
+                    .license(license)
+                    .file(pdf).build();
+
+            license.getCertificates().add(certificate);
+            licenseRepository.save(license);
+
+            return ResponseEntity.ok().body(
+                    CertificateDTO.builder()
+                            .description(certificate.getDescription())
+                            .file(certificate.getFile())
+                            .idLicense(license.getId_license())
+                            .idCertificate(certificate.getId_certificate())
+                            .build()
+            );
+        }
     }
 
     @GetMapping("api/loadCertificate")
     public void loadPDF(@RequestParam long idCertificate) throws IOException {
-        CertificateEntity certificate = certificateRepository.findById(idCertificate).get();
-        pdfLectorService.loadPDF(certificate.getFile());
+        CertificateEntity certificate = certificateRepository.findById(idCertificate).orElse(null);
+        if (certificate != null) {
+            pdfLectorService.loadPDF(certificate.getFile());
+        }
     }
 }

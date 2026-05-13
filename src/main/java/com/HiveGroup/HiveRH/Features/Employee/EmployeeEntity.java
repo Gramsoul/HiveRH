@@ -83,7 +83,6 @@ public class EmployeeEntity {
     private List<PayrollEntity> payrolls;
 
     @OneToMany(mappedBy = "employee")
-    @JsonManagedReference
     private List<LicenseEntity> licenses;
 
     @OneToMany(mappedBy = "employee")
