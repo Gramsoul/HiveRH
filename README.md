@@ -23,4 +23,41 @@ DB_PASSWORD=your_password
 
 El archivo `.env` es ignorado por Git porque puede contener credenciales locales. Mantener `.env.sample` actualizado cada vez que se agregue una nueva variable de entorno requerida.
 
+## Configuracion de la base de datos local
+
+El proyecto esta configurado para conectarse a MySQL. Si se utiliza una base de datos en la maquina host, MySQL debe estar instalado y corriendo localmente.
+
+1. Ingresar a MySQL:
+
+```sh
+mysql -u root -p
+```
+
+2. Crear la base de datos:
+
+```sql
+CREATE DATABASE IF NOT EXISTS hiverh;
+```
+
+3. Verificar que el archivo `.env` apunte a esa base:
+
+```properties
+DB_URL=jdbc:mysql://localhost:3306/hiverh
+DB_USER=root
+DB_PASSWORD=your_password
+```
+
+La base de datos `hiverh` debe existir antes de iniciar la aplicacion. Hibernate no crea la base de datos MySQL automaticamente.
+
+Con la configuracion actual:
+
+```yaml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+```
+
+Hibernate crea o actualiza las tablas dentro de la base `hiverh` a partir de las entidades Java del proyecto.
+
 Autors: Gallego Romero Gonzalo N., Herrera Victor M., Molina Cristian N., Romero Rajoy Jose L. 
