@@ -9,6 +9,8 @@ import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity
 import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
 import com.HiveGroup.HiveRH.Features.Payroll.PayrollEntity;
 import com.HiveGroup.HiveRH.Features.Vacation.VacationEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -54,17 +56,14 @@ public class EmployeeEntity {
     @Column(name = "hire_date", nullable = false)
     private LocalDate hireDate;
 
-    @Column(name = "termination_date", nullable = false)
-    private LocalDate terminationDate;
+    @Column(name = "termination_date")
+    private LocalDate terminationDate = null;
 
-    @Column(name = "net_salary", nullable = false)
-    private double netSalary;
-
-    @Column(name = "gross_salary", nullable = false)
-    private double grossSalary;
+    @Column(name = "base_salary")
+    private Double baseSalary;
 
     @Enumerated(EnumType.STRING)
-    private StatusEnum status;
+    private StatusEnum status = StatusEnum.ACTIVE;
 
     @ManyToOne
     @JoinColumn(name = "id_branch", nullable = false)
@@ -72,21 +71,20 @@ public class EmployeeEntity {
 
     @OneToOne(optional = true)
     @JoinColumn(name = "id_account", nullable = true)
-    private AccountEntity account;
+    private AccountEntity account = null;
 
-    // Assignment
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EmployeeAssignmentEntity> assignments;
 
     @OneToMany(mappedBy = "employee")
-    private List<PayrollEntity> payrolls;
+    private List<PayrollEntity> payrolls = null;
 
     @OneToMany(mappedBy = "employee")
-    private List<LicenseEntity> licenses;
+    private List<LicenseEntity> licenses = null;
 
     @OneToMany(mappedBy = "employee")
-    private List<VacationEntity> vacations;
+    private List<VacationEntity> vacations = null;
 
     @OneToMany(mappedBy = "employee")
-    private List<ComplaintEntity> complaints;
+    private List<ComplaintEntity> complaints = null;
 }
