@@ -1,12 +1,16 @@
-package com.HiveGroup.HiveRH.Features.Payroll;
+package com.HiveGroup.HiveRH.Features.Varation;
 
 import jakarta.persistence.*;
-
-import java.util.List;
+import lombok.*;
 
 @Entity
 @Table(name = "variation")
-public class PayrollVariationsEntity {
+@Getter
+@Setter
+@AllArgsConstructor
+@Builder
+@NoArgsConstructor
+public class VariationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id_variation;
