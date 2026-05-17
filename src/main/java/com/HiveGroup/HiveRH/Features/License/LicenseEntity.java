@@ -43,7 +43,7 @@ public class LicenseEntity {
     @Column(name = "description", length = 200)
     private String description;
 
-    @OneToMany(mappedBy = "license")
+    @OneToMany(mappedBy = "license", cascade = CascadeType.ALL)
     //@JsonManagedReference
     private List<CertificateEntity> certificates;
 

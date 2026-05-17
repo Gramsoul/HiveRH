@@ -6,11 +6,11 @@ import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
 import com.HiveGroup.HiveRH.Features.License.LicenseRepository;
 import com.HiveGroup.HiveRH.Features.License.LicenseService;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -66,6 +66,7 @@ public class CertificateController {
                     .file(pdf).build();
 
             license.getCertificates().add(certificate);
+            certificateRepository.save(certificate); //se agrego porque no esta en cascada aun
             licenseRepository.save(license);
 
             return ResponseEntity.ok().body(
@@ -80,10 +81,16 @@ public class CertificateController {
     }
 
     @GetMapping("api/loadCertificate")
-    public void loadPDF(@RequestParam long idCertificate) throws IOException {
+    public ResponseEntity<byte[]> loadPDF(@RequestParam @NotNull long idCertificate){
         CertificateEntity certificate = certificateRepository.findById(idCertificate).orElse(null);
-        if (certificate != null) {
-            pdfLectorService.loadPDF(certificate.getFile());
+        if (certificate == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            return ResponseEntity.ok()
+                    .header("Content-Disposition",
+                            "inline; filename=certificate.pdf")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(certificate.getFile());
         }
     }
 }
