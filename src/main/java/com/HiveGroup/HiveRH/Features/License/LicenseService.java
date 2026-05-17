@@ -1,12 +1,10 @@
 package com.HiveGroup.HiveRH.Features.License;
 
-import com.HiveGroup.HiveRH.Features.Certificate.CertificateEntity;
 import com.HiveGroup.HiveRH.Features.Certificate.CertificateRepository;
 import com.HiveGroup.HiveRH.Features.Certificate.CertificateService;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
-import com.HiveGroup.HiveRH.Features.Employee.EmployeeNotFound;
+import com.HiveGroup.HiveRH.Features.Employee.EmployeeNotFoundException;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeRepository;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -34,7 +32,7 @@ public class LicenseService {
         List<LicenseDTO> list = new ArrayList<>();
 
         licenseRepository.findAll().forEach(e -> {
-                    list.add(LicenseDTO.builder()
+            list.add(LicenseDTO.builder()
                     .id(e.getId_license())
                     .requestDate(e.getRequestDate())
                     .isAccepted(e.isAccepted())
@@ -53,7 +51,7 @@ public class LicenseService {
         return list;
     }
 
-    public LicenseDTO putLicense(LicenseDTO licenseDTO) throws LicenseNotFoundException, EmployeeNotFound {
+    public LicenseDTO putLicense(LicenseDTO licenseDTO) throws LicenseNotFoundException, EmployeeNotFoundException {
         LicenseEntity ori = licenseRepository.findById(licenseDTO.getId()).orElse(null);
 
         if (ori == null) throw new LicenseNotFoundException("id license don't exist");
@@ -63,7 +61,7 @@ public class LicenseService {
                     .findById(licenseDTO.getIdEmployee())
                     .orElse(null);
 
-            if (employee == null) throw new EmployeeNotFound("");
+            if (employee == null) throw new EmployeeNotFoundException("");
             else ori.setEmployee(employee);
         }
 
@@ -101,6 +99,25 @@ public class LicenseService {
                 .idCertificates(licenseDTO.getIdCertificates())
                 .idEmployee(licenseDTO.getIdEmployee())
                 .build();
+    }
+
+    public LicenseDTO createLicense(LicenseDTO licenseDTO, EmployeeEntity e) {
+        LicenseEntity licenseEntity = LicenseEntity.builder()
+                .employee(e)
+                .requestDate(licenseDTO.getRequestDate())
+                .startDate(licenseDTO.getStartDate())
+                .endDate(licenseDTO.getEndDate())
+                .isPaid(licenseDTO.getIsPaid())
+                .motive(licenseDTO.getMotive())
+                .description(licenseDTO.getDescription())
+                .build();
+
+        licenseRepository.save(licenseEntity);
+
+        licenseDTO.setId(licenseEntity.getId_license());
+
+        return licenseDTO;
+
     }
 
 }
