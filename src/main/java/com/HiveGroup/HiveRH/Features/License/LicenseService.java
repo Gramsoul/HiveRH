@@ -90,6 +90,7 @@ public class LicenseService {
         licenseRepository.save(ori);
 
         return LicenseDTO.builder()
+                .id(licenseDTO.getId())
                 .requestDate(ori.getRequestDate())
                 .isAccepted(ori.isAccepted())
                 .startDate(ori.getStartDate())

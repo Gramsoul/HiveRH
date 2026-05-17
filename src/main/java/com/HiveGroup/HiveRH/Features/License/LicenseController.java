@@ -17,7 +17,7 @@ public class LicenseController {
         this.licenseRepository = licenseRepository;
     }
 
-    @GetMapping("api/license")
+    @GetMapping("/api/license")
     public ResponseEntity<List<LicenseDTO>> getLicenses() {
 
         return ResponseEntity.ok().body(
@@ -25,7 +25,7 @@ public class LicenseController {
         );
     }
 
-    @GetMapping("api/license/{id_license}")
+    @GetMapping("/api/license/{id_license}")
     public ResponseEntity<LicenseDTO> getVacationByID(@PathVariable @NotNull Long id_license){
         LicenseEntity ent = licenseRepository.findById(id_license).orElse(null);
 
@@ -55,7 +55,7 @@ public class LicenseController {
         }
     }
 
-    @PutMapping("api/license/")
+    @PutMapping("/api/license")
     public ResponseEntity<LicenseDTO> putLicense(@RequestBody @NotNull LicenseDTO license){
         LicenseEntity lic = licenseRepository.findById(license.getId()).orElse(null);
 
