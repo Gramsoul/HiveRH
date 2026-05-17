@@ -1,8 +1,10 @@
 package com.HiveGroup.HiveRH.Features.Certificate;
 
 import com.HiveGroup.HiveRH.Common.Utils.Services.PdfLectorService;
+import com.HiveGroup.HiveRH.Features.License.LicenseDTO;
 import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
 import com.HiveGroup.HiveRH.Features.License.LicenseRepository;
+import com.HiveGroup.HiveRH.Features.License.LicenseService;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -14,32 +16,46 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 import java.io.IOException;
+import java.util.List;
 
 @Controller
 public class CertificateController {
 
     PdfLectorService pdfLectorService;
+    CertificateService certificateService;
+    LicenseService licenseService;
     CertificateRepository certificateRepository;
     LicenseRepository licenseRepository;
-    CertificateService certificateService;
 
     public CertificateController(
             PdfLectorService pdfLectorService,
+            CertificateService certificateService,
+            LicenseService licenseService,
             CertificateRepository certificateRepository,
-            LicenseRepository licenseRepository,
-            CertificateService certificateService
+            LicenseRepository licenseRepository
     ) {
         this.pdfLectorService = pdfLectorService;
+        this.certificateService = certificateService;
+        this.licenseService = licenseService;
         this.certificateRepository = certificateRepository;
         this.licenseRepository = licenseRepository;
-        this.certificateService = certificateService;
+    }
+
+    @GetMapping("/api/license")
+    public ResponseEntity<List<LicenseDTO>> getLicenses() {
+
+        return ResponseEntity.ok().body(
+                licenseService.getAllLicenseDTO()
+        );
     }
 
     @PostMapping("/api/saveCertificate")
-    public ResponseEntity<CertificateDTO> savePDF(@RequestBody @NotNull MultipartFile file) throws IOException {
+    public ResponseEntity<CertificateDTO> savePDF(@RequestParam("idLicense") @NotNull Long idLicense,
+                                                  @RequestParam("file") @NotNull MultipartFile file)
+            throws IOException {
 
         byte[] pdf = pdfLectorService.savePDF(file);
-        LicenseEntity license = licenseRepository.findById((long) 1).orElse(null);
+        LicenseEntity license = licenseRepository.findById(idLicense).orElse(null);
 
         if (license == null) {
             return ResponseEntity.notFound().build();
