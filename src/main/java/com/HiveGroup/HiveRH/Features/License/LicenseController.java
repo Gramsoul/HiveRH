@@ -63,7 +63,6 @@ public class LicenseController {
     public ResponseEntity<LicenseDTO> postLicense(@RequestBody @NotNull LicenseDTO license) {
         EmployeeEntity e = employeeRepository.findById(license.getIdEmployee()).orElse(null);
         if (e == null) {
-            System.out.println("aca asdlaksdjldksdj");
             return ResponseEntity.notFound().build();
         }
         else {

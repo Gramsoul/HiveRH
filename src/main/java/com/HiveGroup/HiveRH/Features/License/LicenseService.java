@@ -55,7 +55,6 @@ public class LicenseService {
         LicenseEntity ori = licenseRepository.findById(licenseDTO.getId()).orElse(null);
 
         if (ori == null) throw new LicenseNotFoundException("id license don't exist");
-
         if (licenseDTO.getIdEmployee() != null) {
             EmployeeEntity employee = employeeRepository
                     .findById(licenseDTO.getIdEmployee())
@@ -64,26 +63,17 @@ public class LicenseService {
             if (employee == null) throw new EmployeeNotFoundException("");
             else ori.setEmployee(employee);
         }
-
         if (licenseDTO.getIdCertificates() != null) {
-            ori.setCertificates(
-                    certificateService.getCertificates(licenseDTO.getIdCertificates())
-            );
+                                                    ori.setCertificates(certificateService
+                                                            .getCertificates(licenseDTO.getIdCertificates()));
         }
-
-        if (licenseDTO.getRequestDate() != null) ori.setRequestDate(licenseDTO.getRequestDate());
-
-        if (licenseDTO.getIsAccepted() != null) ori.setAccepted(licenseDTO.getIsAccepted());
-
-        if (licenseDTO.getStartDate() != null) ori.setStartDate(licenseDTO.getStartDate());
-
-        if (licenseDTO.getEndDate() != null) ori.setEndDate(licenseDTO.getEndDate());
-
-        if (licenseDTO.getIsPaid() != null) ori.setPaid(licenseDTO.getIsPaid());
-
-        if (licenseDTO.getMotive() != null) ori.setMotive(licenseDTO.getMotive());
-
-        if (licenseDTO.getDescription() != null) ori.setDescription(licenseDTO.getDescription());
+        if (licenseDTO.getRequestDate() != null)    ori.setRequestDate(licenseDTO.getRequestDate());
+        if (licenseDTO.getIsAccepted()  != null)    ori.setAccepted(licenseDTO.getIsAccepted());
+        if (licenseDTO.getStartDate()   != null)    ori.setStartDate(licenseDTO.getStartDate());
+        if (licenseDTO.getEndDate()     != null)    ori.setEndDate(licenseDTO.getEndDate());
+        if (licenseDTO.getIsPaid()      != null)    ori.setPaid(licenseDTO.getIsPaid());
+        if (licenseDTO.getMotive()      != null)    ori.setMotive(licenseDTO.getMotive());
+        if (licenseDTO.getDescription() != null)    ori.setDescription(licenseDTO.getDescription());
 
         licenseRepository.save(ori);
 

@@ -1,5 +1,6 @@
 package com.HiveGroup.HiveRH.Features.Certificate;
 
+import com.HiveGroup.HiveRH.Common.Utils.DTOs.MessageDTO;
 import com.HiveGroup.HiveRH.Common.Utils.Services.PdfLectorService;
 import com.HiveGroup.HiveRH.Features.License.LicenseDTO;
 import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
@@ -9,13 +10,12 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 @Controller
@@ -41,7 +41,7 @@ public class CertificateController {
         this.licenseRepository = licenseRepository;
     }
 
-    @PostMapping("/api/saveCertificate")
+    @PostMapping("/api/certificate")
     public ResponseEntity<CertificateDTO> savePDF(@RequestParam("idLicense") @NotNull Long idLicense,
                                                   @RequestParam("file") @NotNull MultipartFile file)
             throws IOException {
@@ -72,9 +72,9 @@ public class CertificateController {
         }
     }
 
-    @GetMapping("api/loadCertificate")
-    public ResponseEntity<byte[]> loadPDF(@RequestParam @NotNull long idCertificate){
-        CertificateEntity certificate = certificateRepository.findById(idCertificate).orElse(null);
+    @GetMapping("/api/certificate/{id_certificate}")
+    public ResponseEntity<byte[]> loadPDF(@PathVariable @NotNull long id_certificate){
+        CertificateEntity certificate = certificateRepository.findById(id_certificate).orElse(null);
         if (certificate == null) {
             return ResponseEntity.notFound().build();
         } else {
@@ -84,5 +84,21 @@ public class CertificateController {
                     .contentType(MediaType.APPLICATION_PDF)
                     .body(certificate.getFile());
         }
+    }
+
+    @DeleteMapping("/api/certificate/{id_certificate}")
+    public ResponseEntity<MessageDTO> deleteCertificate(@PathVariable @NotNull Long id_certificate){
+       CertificateEntity c = certificateRepository.findById(id_certificate).orElse(null);
+
+       if(c == null) return ResponseEntity.notFound().build();
+       else {
+           certificateRepository.delete(c);
+           return ResponseEntity.ok().body(
+                   MessageDTO.builder()
+                           .date(LocalDate.now())
+                           .message("Certificate deleted")
+                           .build()
+           );
+       }
     }
 }
