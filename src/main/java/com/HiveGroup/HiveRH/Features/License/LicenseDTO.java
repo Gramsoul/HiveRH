@@ -13,10 +13,10 @@ import java.util.List;
 public class LicenseDTO {
     private Long id;
     private LocalDate requestDate;
-    private boolean isAccepted;
+    private Boolean isAccepted;
     private LocalDate startDate;
     private LocalDate endDate;
-    private boolean isPaid;
+    private Boolean isPaid;
     private String motive;
     private String description;
     private List<Long> idCertificates;

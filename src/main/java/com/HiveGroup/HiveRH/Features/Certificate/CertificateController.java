@@ -41,14 +41,6 @@ public class CertificateController {
         this.licenseRepository = licenseRepository;
     }
 
-    @GetMapping("/api/license")
-    public ResponseEntity<List<LicenseDTO>> getLicenses() {
-
-        return ResponseEntity.ok().body(
-                licenseService.getAllLicenseDTO()
-        );
-    }
-
     @PostMapping("/api/saveCertificate")
     public ResponseEntity<CertificateDTO> savePDF(@RequestParam("idLicense") @NotNull Long idLicense,
                                                   @RequestParam("file") @NotNull MultipartFile file)
