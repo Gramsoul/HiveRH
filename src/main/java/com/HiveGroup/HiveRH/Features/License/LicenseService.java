@@ -51,7 +51,7 @@ public class LicenseService {
         return list;
     }
 
-    public LicenseDTO putLicense(LicenseDTO licenseDTO) throws LicenseNotFoundException, EmployeeNotFoundException {
+    public LicenseDTO patchLicense(LicenseDTO licenseDTO) throws LicenseNotFoundException, EmployeeNotFoundException {
         LicenseEntity ori = licenseRepository.findById(licenseDTO.getId()).orElse(null);
 
         if (ori == null) throw new LicenseNotFoundException("id license don't exist");

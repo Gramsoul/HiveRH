@@ -71,14 +71,14 @@ public class LicenseController {
         }
     }
 
-    @PutMapping("/api/license")
-    public ResponseEntity<LicenseDTO> putLicense(@RequestBody @NotNull LicenseDTO license) {
+    @PatchMapping("/api/license")
+    public ResponseEntity<LicenseDTO> patchLicense(@RequestBody @NotNull LicenseDTO license) {
         LicenseEntity lic = licenseRepository.findById(license.getId()).orElse(null);
 
         if (lic == null) {
             return ResponseEntity.notFound().build();
         } else {
-            LicenseDTO lc = licenseService.putLicense(license);
+            LicenseDTO lc = licenseService.patchLicense(license);
             return ResponseEntity.ok().body(lc);
         }
     }
