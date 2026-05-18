@@ -2,6 +2,8 @@ package com.HiveGroup.HiveRH.Features.License;
 
 import com.HiveGroup.HiveRH.Features.Certificate.CertificateEntity;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -41,10 +43,12 @@ public class LicenseEntity {
     @Column(name = "description", length = 200)
     private String description;
 
-    @OneToMany(mappedBy = "license")
+    @OneToMany(mappedBy = "license", cascade = CascadeType.ALL)
+    //@JsonManagedReference
     private List<CertificateEntity> certificates;
 
     @ManyToOne
     @JoinColumn(name = "id_employee", nullable = false)
+    //@JsonBackReference
     private EmployeeEntity employee;
 }
