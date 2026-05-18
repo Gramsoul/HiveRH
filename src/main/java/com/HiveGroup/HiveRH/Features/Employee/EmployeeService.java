@@ -9,6 +9,7 @@ import com.HiveGroup.HiveRH.Features.Branch.BranchNotFoundException;
 import com.HiveGroup.HiveRH.Features.Branch.BranchRepository;
 import com.HiveGroup.HiveRH.Features.Department.DepartamentRepository;
 import com.HiveGroup.HiveRH.Features.Department.DepartmentEntity;
+import com.HiveGroup.HiveRH.Features.Department.DepartmentNotFoundException;
 import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeCreateDTO;
 import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeFilterDTO;
 import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeResponseDTO;
@@ -16,6 +17,7 @@ import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeUpdateDTO;
 import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentDTO;
 import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity;
 import com.HiveGroup.HiveRH.Features.Position.PositionEntity;
+import com.HiveGroup.HiveRH.Features.Position.PositionNotFoundException;
 import com.HiveGroup.HiveRH.Features.Position.PositionRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,21 +36,21 @@ public class EmployeeService {
 
     public EmployeeResponseDTO create(EmployeeCreateDTO employeeCreateDTO){
         if (employeeCreateDTO.id_branch() == null){
-            throw new RuntimeException("La sucursal es obligatoria");
+            throw new BranchNotFoundException("La sucursal es obligatoria");
         }
         if (employeeCreateDTO.id_position() == null){
-            throw new RuntimeException("El puesto es obligatorio");
+            throw new PositionNotFoundException("El puesto es obligatorio");
         }
         if (employeeCreateDTO.id_department() == null){
-            throw new RuntimeException("El departamento es obligatorio");
+            throw new DepartmentNotFoundException("El departamento es obligatorio");
         }
 
         BranchEntity branch = branchRepository.findById(employeeCreateDTO.id_branch())
-                .orElseThrow(() -> new RuntimeException("Sucursal no encontrada"));
+                .orElseThrow(() -> new BranchNotFoundException("Sucursal no encontrada"));
         PositionEntity position = positionRepository.findById(employeeCreateDTO.id_position())
-                .orElseThrow(() -> new RuntimeException("Puesto no encontrado"));
+                .orElseThrow(() -> new PositionNotFoundException("Puesto no encontrado"));
         DepartmentEntity department = departamentRepository.findById(employeeCreateDTO.id_department())
-                .orElseThrow(() -> new RuntimeException("Departamento no encontrado"));
+                .orElseThrow(() -> new DepartmentNotFoundException("Departamento no encontrado"));
 
         EmployeeEntity employee = EmployeeEntity.builder()
                 .name(employeeCreateDTO.name())
