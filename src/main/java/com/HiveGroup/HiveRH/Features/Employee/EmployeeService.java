@@ -2,8 +2,10 @@ package com.HiveGroup.HiveRH.Features.Employee;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
 import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
+import com.HiveGroup.HiveRH.Features.Account.AccountNotFoundException;
 import com.HiveGroup.HiveRH.Features.Account.AccountRepository;
 import com.HiveGroup.HiveRH.Features.Branch.BranchEntity;
+import com.HiveGroup.HiveRH.Features.Branch.BranchNotFoundException;
 import com.HiveGroup.HiveRH.Features.Branch.BranchRepository;
 import com.HiveGroup.HiveRH.Features.Department.DepartamentRepository;
 import com.HiveGroup.HiveRH.Features.Department.DepartmentEntity;
@@ -91,7 +93,7 @@ public class EmployeeService {
     public EmployeeResponseDTO putById(Long id, EmployeeUpdateDTO employeeUpdateDTO){
 
         EmployeeEntity employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+                .orElseThrow(() -> new EmployeeNotFoundException("Empleado no encontrado"));
 
         employee.setName(employeeUpdateDTO.name());
         employee.setLastName(employeeUpdateDTO.lastName());
@@ -106,12 +108,12 @@ public class EmployeeService {
         employee.setStatus(employeeUpdateDTO.status());
         employee.setBaseSalary(employeeUpdateDTO.base_salary());
         BranchEntity branch = branchRepository.findById(employeeUpdateDTO.id_branch())
-                .orElseThrow(()->new RuntimeException("Sucursal no encontrada"));
+                .orElseThrow(()->new BranchNotFoundException("Sucursal no encontrada"));
         employee.setBranch(branch);
 
         if (employeeUpdateDTO.id_account() != null){
             AccountEntity account = accountRepository.findById(employeeUpdateDTO.id_account())
-                    .orElseThrow(() -> new RuntimeException("Cuenta no encotrada"));
+                    .orElseThrow(() -> new AccountNotFoundException("Cuenta no encotrada"));
             employee.setAccount(account);
         }else {
             employee.setAccount(null);
@@ -126,7 +128,7 @@ public class EmployeeService {
     public EmployeeResponseDTO patchById(Long id, EmployeeUpdateDTO employeeUpdateDTO){
 
         EmployeeEntity employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+                .orElseThrow(() -> new EmployeeNotFoundException("Empleado no encontrado"));
 
         employee.setName(employeeUpdateDTO.name() != null ? employeeUpdateDTO.name() : employee.getName());
         employee.setLastName(employeeUpdateDTO.lastName() != null ? employeeUpdateDTO.lastName() : employee.getLastName());
@@ -144,14 +146,14 @@ public class EmployeeService {
 
         if (employeeUpdateDTO.id_branch() != null){
             BranchEntity branch = branchRepository.findById(employeeUpdateDTO.id_branch())
-                    .orElseThrow(()->new RuntimeException("Sucursal no encontrada"));
+                    .orElseThrow(()->new BranchNotFoundException("Sucursal no encontrada"));
 
             employee.setBranch(branch);
         }
 
         if (employeeUpdateDTO.id_account() != null){
             AccountEntity account = accountRepository.findById(employeeUpdateDTO.id_account())
-                    .orElseThrow(() -> new RuntimeException("Cuenta no encotrada"));
+                    .orElseThrow(() -> new AccountNotFoundException("Cuenta no encotrada"));
             employee.setAccount(account);
         }
         EmployeeEntity updatedEmployee = employeeRepository.save(employee);
