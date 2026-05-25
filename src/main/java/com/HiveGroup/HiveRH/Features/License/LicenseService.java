@@ -1,31 +1,33 @@
 package com.HiveGroup.HiveRH.Features.License;
 
-import com.HiveGroup.HiveRH.Features.Certificate.CertificateRepository;
+import com.HiveGroup.HiveRH.Features.Certificate.CertificateEntity;
 import com.HiveGroup.HiveRH.Features.Certificate.CertificateService;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeNotFoundException;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeRepository;
+import com.HiveGroup.HiveRH.Features.License.DTO.LicenseDTO;
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@AllArgsConstructor
 @Service
 public class LicenseService {
     public LicenseRepository licenseRepository;
     public EmployeeRepository employeeRepository;
-    public CertificateRepository certificateRepository;
-
     public CertificateService certificateService;
+    public LicenseMapper licenseMapper;
 
-    public LicenseService(LicenseRepository licenseRepository,
-                          EmployeeRepository employeeRepository,
-                          CertificateRepository certificateRepository,
-                          CertificateService certificateService) {
-        this.employeeRepository = employeeRepository;
-        this.licenseRepository = licenseRepository;
-        this.certificateRepository = certificateRepository;
-        this.certificateService = certificateService;
+
+    public LicenseDTO getDTO(LicenseEntity licence) {
+        return licenseMapper.toDTO(licence);
+    }
+
+    public LicenseEntity getEntity(LicenseDTO license) {
+        return licenseMapper.toEntity(license);
     }
 
     public List<LicenseDTO> getAllLicenseDTO() {
@@ -51,29 +53,28 @@ public class LicenseService {
         return list;
     }
 
+    @Transactional
     public LicenseDTO patchLicense(LicenseDTO licenseDTO) throws LicenseNotFoundException, EmployeeNotFoundException {
-        LicenseEntity ori = licenseRepository.findById(licenseDTO.getId()).orElse(null);
+        LicenseEntity ori = licenseRepository.findById(licenseDTO.getId()).orElseThrow(() -> new LicenseNotFoundException(""));
 
-        if (ori == null) throw new LicenseNotFoundException("id license don't exist");
-        if (licenseDTO.getIdEmployee() != null) {
+        if (licenseDTO.getId() != null) {
             EmployeeEntity employee = employeeRepository
                     .findById(licenseDTO.getIdEmployee())
-                    .orElse(null);
+                    .orElseThrow(() -> new EmployeeNotFoundException(""));
 
-            if (employee == null) throw new EmployeeNotFoundException("");
-            else ori.setEmployee(employee);
+            ori.setEmployee(employee);
         }
         if (licenseDTO.getIdCertificates() != null) {
-                                                    ori.setCertificates(certificateService
-                                                            .getCertificates(licenseDTO.getIdCertificates()));
+            ori.setCertificates(certificateService
+                    .getCertificates(licenseDTO.getIdCertificates()));
         }
-        if (licenseDTO.getRequestDate() != null)    ori.setRequestDate(licenseDTO.getRequestDate());
-        if (licenseDTO.getIsAccepted()  != null)    ori.setAccepted(licenseDTO.getIsAccepted());
-        if (licenseDTO.getStartDate()   != null)    ori.setStartDate(licenseDTO.getStartDate());
-        if (licenseDTO.getEndDate()     != null)    ori.setEndDate(licenseDTO.getEndDate());
-        if (licenseDTO.getIsPaid()      != null)    ori.setPaid(licenseDTO.getIsPaid());
-        if (licenseDTO.getMotive()      != null)    ori.setMotive(licenseDTO.getMotive());
-        if (licenseDTO.getDescription() != null)    ori.setDescription(licenseDTO.getDescription());
+        if (licenseDTO.getRequestDate() != null) ori.setRequestDate(licenseDTO.getRequestDate());
+        if (licenseDTO.getIsAccepted()  != null) ori.setAccepted(licenseDTO.getIsAccepted());
+        if (licenseDTO.getStartDate()   != null) ori.setStartDate(licenseDTO.getStartDate());
+        if (licenseDTO.getEndDate()     != null) ori.setEndDate(licenseDTO.getEndDate());
+        if (licenseDTO.getIsPaid()      != null) ori.setPaid(licenseDTO.getIsPaid());
+        if (licenseDTO.getMotive()      != null) ori.setMotive(licenseDTO.getMotive());
+        if (licenseDTO.getDescription() != null) ori.setDescription(licenseDTO.getDescription());
 
         licenseRepository.save(ori);
 
@@ -91,7 +92,9 @@ public class LicenseService {
                 .build();
     }
 
-    public LicenseDTO createLicense(LicenseDTO licenseDTO, EmployeeEntity e) {
+    @Transactional
+    public LicenseDTO createLicense(LicenseDTO licenseDTO) throws EmployeeNotFoundException {
+        EmployeeEntity e = employeeRepository.findById(licenseDTO.getIdEmployee()).orElseThrow(() -> new EmployeeNotFoundException(""));
         LicenseEntity licenseEntity = LicenseEntity.builder()
                 .employee(e)
                 .requestDate(licenseDTO.getRequestDate())
@@ -101,13 +104,32 @@ public class LicenseService {
                 .motive(licenseDTO.getMotive())
                 .description(licenseDTO.getDescription())
                 .build();
-
         licenseRepository.save(licenseEntity);
-
         licenseDTO.setId(licenseEntity.getId_license());
 
         return licenseDTO;
+    }
 
+    public LicenseDTO getLicense(Long id) throws LicenseNotFoundException {
+        LicenseEntity ent = licenseRepository.findById(id).orElseThrow(() -> new LicenseNotFoundException(""));
+
+        List<Long> idCers = ent.getCertificates()
+                .stream()
+                .map(CertificateEntity::getId_certificate)
+                .toList();
+
+        return LicenseDTO.builder()
+                .id(ent.getId_license())
+                .requestDate(ent.getRequestDate())
+                .isAccepted(ent.isAccepted())
+                .startDate(ent.getStartDate())
+                .endDate(ent.getEndDate())
+                .isPaid(ent.isPaid())
+                .motive(ent.getMotive())
+                .description(ent.getDescription())
+                .idCertificates(idCers)
+                .idEmployee(ent.getEmployee().getId_employee())
+                .build();
     }
 
 }

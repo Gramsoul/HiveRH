@@ -1,4 +1,4 @@
-package com.HiveGroup.HiveRH.Features.Certificate;
+package com.HiveGroup.HiveRH.Features.Certificate.DTO;
 
 import lombok.*;
 
