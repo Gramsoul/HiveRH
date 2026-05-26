@@ -1,15 +1,13 @@
 package com.HiveGroup.HiveRH.Features.Employee;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
+import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
-import com.HiveGroup.HiveRH.Features.Account.AccountNotFoundException;
 import com.HiveGroup.HiveRH.Features.Account.AccountRepository;
 import com.HiveGroup.HiveRH.Features.Branch.BranchEntity;
-import com.HiveGroup.HiveRH.Features.Branch.BranchNotFoundException;
 import com.HiveGroup.HiveRH.Features.Branch.BranchRepository;
 import com.HiveGroup.HiveRH.Features.Department.DepartamentRepository;
 import com.HiveGroup.HiveRH.Features.Department.DepartmentEntity;
-import com.HiveGroup.HiveRH.Features.Department.DepartmentNotFoundException;
 import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeCreateDTO;
 import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeFilterDTO;
 import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeResponseDTO;
@@ -17,7 +15,6 @@ import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeUpdateDTO;
 import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentDTO;
 import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity;
 import com.HiveGroup.HiveRH.Features.Position.PositionEntity;
-import com.HiveGroup.HiveRH.Features.Position.PositionNotFoundException;
 import com.HiveGroup.HiveRH.Features.Position.PositionRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,21 +33,21 @@ public class EmployeeService {
 
     public EmployeeResponseDTO create(EmployeeCreateDTO employeeCreateDTO){
         if (employeeCreateDTO.id_branch() == null){
-            throw new BranchNotFoundException("La sucursal es obligatoria");
+            throw new EntityNotFoundException("La sucursal es obligatoria","Branch");
         }
         if (employeeCreateDTO.id_position() == null){
-            throw new PositionNotFoundException("El puesto es obligatorio");
+            throw new EntityNotFoundException("El puesto es obligatorio", "Position");
         }
         if (employeeCreateDTO.id_department() == null){
-            throw new DepartmentNotFoundException("El departamento es obligatorio");
+            throw new EntityNotFoundException("El departamento es obligatorio","Department");
         }
 
         BranchEntity branch = branchRepository.findById(employeeCreateDTO.id_branch())
-                .orElseThrow(() -> new BranchNotFoundException("Sucursal no encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Sucursal no encontrada","Branch"));
         PositionEntity position = positionRepository.findById(employeeCreateDTO.id_position())
-                .orElseThrow(() -> new PositionNotFoundException("Puesto no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Puesto no encontrado","Position"));
         DepartmentEntity department = departamentRepository.findById(employeeCreateDTO.id_department())
-                .orElseThrow(() -> new DepartmentNotFoundException("Departamento no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Departamento no encontrado","Department"));
 
         EmployeeEntity employee = EmployeeEntity.builder()
                 .name(employeeCreateDTO.name())
@@ -83,7 +80,7 @@ public class EmployeeService {
 
     public EmployeeResponseDTO deleteById(Long id){
         EmployeeEntity employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado","Employee"));
 
         employee.setStatus(StatusEnum.TERMINATED);
 
@@ -95,7 +92,7 @@ public class EmployeeService {
     public EmployeeResponseDTO putById(Long id, EmployeeUpdateDTO employeeUpdateDTO){
 
         EmployeeEntity employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Empleado no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado","Employee"));
 
         employee.setName(employeeUpdateDTO.name());
         employee.setLastName(employeeUpdateDTO.lastName());
@@ -110,12 +107,12 @@ public class EmployeeService {
         employee.setStatus(employeeUpdateDTO.status());
         employee.setBaseSalary(employeeUpdateDTO.base_salary());
         BranchEntity branch = branchRepository.findById(employeeUpdateDTO.id_branch())
-                .orElseThrow(()->new BranchNotFoundException("Sucursal no encontrada"));
+                .orElseThrow(()->new EntityNotFoundException("Sucursal no encontrada","Branch"));
         employee.setBranch(branch);
 
         if (employeeUpdateDTO.id_account() != null){
             AccountEntity account = accountRepository.findById(employeeUpdateDTO.id_account())
-                    .orElseThrow(() -> new AccountNotFoundException("Cuenta no encotrada"));
+                    .orElseThrow(() -> new EntityNotFoundException("Cuenta no encotrada","Account"));
             employee.setAccount(account);
         }else {
             employee.setAccount(null);
@@ -130,7 +127,7 @@ public class EmployeeService {
     public EmployeeResponseDTO patchById(Long id, EmployeeUpdateDTO employeeUpdateDTO){
 
         EmployeeEntity employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Empleado no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado", "Employee"));
 
         employee.setName(employeeUpdateDTO.name() != null ? employeeUpdateDTO.name() : employee.getName());
         employee.setLastName(employeeUpdateDTO.lastName() != null ? employeeUpdateDTO.lastName() : employee.getLastName());
@@ -148,14 +145,14 @@ public class EmployeeService {
 
         if (employeeUpdateDTO.id_branch() != null){
             BranchEntity branch = branchRepository.findById(employeeUpdateDTO.id_branch())
-                    .orElseThrow(()->new BranchNotFoundException("Sucursal no encontrada"));
+                    .orElseThrow(()->new EntityNotFoundException("Sucursal no encontrada", "Branch"));
 
             employee.setBranch(branch);
         }
 
         if (employeeUpdateDTO.id_account() != null){
             AccountEntity account = accountRepository.findById(employeeUpdateDTO.id_account())
-                    .orElseThrow(() -> new AccountNotFoundException("Cuenta no encotrada"));
+                    .orElseThrow(() -> new EntityNotFoundException("Cuenta no encotrada", "Account"));
             employee.setAccount(account);
         }
         EmployeeEntity updatedEmployee = employeeRepository.save(employee);
@@ -165,7 +162,7 @@ public class EmployeeService {
 
     public EmployeeResponseDTO findById(Long id){
         EmployeeEntity employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado", "Employee"));
         return toDTO(employee);
     }
 
