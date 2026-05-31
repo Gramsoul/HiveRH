@@ -8,6 +8,7 @@ import com.HiveGroup.HiveRH.Features.Employee.EmployeeRepository;
 import com.HiveGroup.HiveRH.Features.License.DTO.LicenseDTO;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ public class LicenseService {
     public LicenseRepository licenseRepository;
     public EmployeeRepository employeeRepository;
     public CertificateService certificateService;
+    @Autowired
     public LicenseMapper licenseMapper;
 
 

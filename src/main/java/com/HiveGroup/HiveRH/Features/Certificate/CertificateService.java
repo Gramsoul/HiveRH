@@ -1,18 +1,18 @@
 package com.HiveGroup.HiveRH.Features.Certificate;
 
-import com.HiveGroup.HiveRH.Common.Utils.DTOs.MessageDTO;
+
 import com.HiveGroup.HiveRH.Common.Utils.Exception.FileProcessingException;
 import com.HiveGroup.HiveRH.Common.Utils.Services.PdfLectorService;
 import com.HiveGroup.HiveRH.Features.Certificate.DTO.CertificateDTO;
 import com.HiveGroup.HiveRH.Features.Certificate.DTO.ResponseCertificateDTO;
 import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
+import com.HiveGroup.HiveRH.Features.License.LicenseNotFoundException;
+import com.HiveGroup.HiveRH.Features.License.LicenseRepository;
 import com.HiveGroup.HiveRH.Features.License.LicenseService;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -23,9 +23,10 @@ import java.util.List;
 @Service
 public class CertificateService {
     CertificateRepository certificateRepository;
-    CertificateMapper certificateMapper;
     PdfLectorService pdfLectorService;
-    LicenseService licenseService;
+    LicenseRepository licenseRepository;
+    @Autowired
+    CertificateMapper certificateMapper;
 
     public CertificateEntity toEntity(CertificateDTO certificate) {
         return certificateMapper.toEntity(certificate);
@@ -63,7 +64,8 @@ public class CertificateService {
     public CertificateDTO createCertificate(Long idLicense, String description, MultipartFile file) {
         try {
             byte[] pdf = pdfLectorService.savePDF(file);
-            LicenseEntity license = licenseService.getEntity(licenseService.getLicense(idLicense));
+            LicenseEntity license = licenseRepository.findById(idLicense)
+                    .orElseThrow(() -> new LicenseNotFoundException(""));
 
             CertificateEntity certificate = CertificateEntity.builder()
                     .description(description)
