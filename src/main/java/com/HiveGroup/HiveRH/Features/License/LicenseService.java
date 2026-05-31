@@ -1,11 +1,14 @@
 package com.HiveGroup.HiveRH.Features.License;
 
+import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Features.Certificate.CertificateEntity;
 import com.HiveGroup.HiveRH.Features.Certificate.CertificateService;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeNotFoundException;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeRepository;
 import com.HiveGroup.HiveRH.Features.License.DTO.LicenseDTO;
+import com.HiveGroup.HiveRH.Features.License.DTO.RequestLicenseDTO;
+import com.HiveGroup.HiveRH.Features.License.DTO.ResponseLicenseDTO;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,8 +67,8 @@ public class LicenseService {
     }
 
     @Transactional
-    public LicenseDTO patchLicense(LicenseDTO licenseDTO) throws LicenseNotFoundException, EmployeeNotFoundException {
-        LicenseEntity ori = licenseRepository.findById(licenseDTO.getId()).orElseThrow(() -> new LicenseNotFoundException(""));
+    public LicenseDTO patchLicense(LicenseDTO licenseDTO) {
+        LicenseEntity ori = licenseRepository.findById(licenseDTO.getId()).orElseThrow(() -> new EntityNotFoundException("Licencia no entrada","License"));
 
         if (licenseDTO.getId() != null) {
             EmployeeEntity employee = employeeRepository
@@ -103,25 +106,22 @@ public class LicenseService {
     }
 
     @Transactional
-    public LicenseDTO createLicense(LicenseDTO licenseDTO) throws EmployeeNotFoundException {
-        EmployeeEntity e = employeeRepository.findById(licenseDTO.getIdEmployee()).orElseThrow(() -> new EmployeeNotFoundException(""));
+    public void createLicense(RequestLicenseDTO license){
+        EmployeeEntity e = employeeRepository.findById(license.idEmployee()).orElseThrow(() -> new EntityNotFoundException("Empleado no entrada","Employee"));
         LicenseEntity licenseEntity = LicenseEntity.builder()
                 .employee(e)
-                .requestDate(licenseDTO.getRequestDate())
-                .startDate(licenseDTO.getStartDate())
-                .endDate(licenseDTO.getEndDate())
-                .isPaid(licenseDTO.getIsPaid())
-                .motive(licenseDTO.getMotive())
-                .description(licenseDTO.getDescription())
+                .requestDate(license.requestDate())
+                .startDate(license.startDate())
+                .endDate(license.endDate())
+                .isPaid(license.isPaid())
+                .motive(license.motive())
+                .description(license.description())
                 .build();
         licenseRepository.save(licenseEntity);
-        licenseDTO.setId(licenseEntity.getId_license());
-
-        return licenseDTO;
     }
 
-    public LicenseDTO getLicense(Long id) throws LicenseNotFoundException {
-        LicenseEntity ent = licenseRepository.findById(id).orElseThrow(() -> new LicenseNotFoundException(""));
+    public LicenseDTO getLicense(Long id){
+        LicenseEntity ent = licenseRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Licencia no entrada","License"));
 
         List<Long> idCers = ent.getCertificates()
                 .stream()

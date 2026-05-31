@@ -1,6 +1,8 @@
 package com.HiveGroup.HiveRH.Features.License;
 
 import com.HiveGroup.HiveRH.Features.License.DTO.LicenseDTO;
+import com.HiveGroup.HiveRH.Features.License.DTO.RequestLicenseDTO;
+import com.HiveGroup.HiveRH.Features.License.DTO.ResponseLicenseDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,9 +29,8 @@ public class LicenseController {
     }
 
     @PostMapping("/api/license")
-    public ResponseEntity<LicenseDTO> postLicense(@RequestBody @NotNull LicenseDTO license) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(licenseService.createLicense(license));
-
+    public ResponseEntity<ResponseLicenseDTO> postLicense(@RequestBody @NotNull RequestLicenseDTO license) {
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PatchMapping("/api/license")
