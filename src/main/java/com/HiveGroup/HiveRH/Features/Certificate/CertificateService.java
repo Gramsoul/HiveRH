@@ -1,15 +1,13 @@
 package com.HiveGroup.HiveRH.Features.Certificate;
 
 
-import com.HiveGroup.HiveRH.Common.Utils.Exception.FileProcessingException;
+import com.HiveGroup.HiveRH.Common.Utils.Exceptions.FileProcessingException;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Common.Utils.Services.PdfLectorService;
 import com.HiveGroup.HiveRH.Features.Certificate.DTO.CertificateDTO;
 import com.HiveGroup.HiveRH.Features.Certificate.DTO.ResponseCertificateDTO;
 import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
-import com.HiveGroup.HiveRH.Features.License.LicenseNotFoundException;
 import com.HiveGroup.HiveRH.Features.License.LicenseRepository;
-import com.HiveGroup.HiveRH.Features.License.LicenseService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
