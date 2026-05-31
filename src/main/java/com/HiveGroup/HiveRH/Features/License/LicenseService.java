@@ -25,7 +25,15 @@ public class LicenseService {
 
 
     public LicenseDTO getDTO(LicenseEntity licence) {
-        return licenseMapper.toDTO(licence);
+        //return licenseMapper.toDTO(licence);
+        return LicenseDTO.builder()
+                .id(licence.getId_license())
+                .startDate(licence.getStartDate())
+                .motive(licence.getMotive())
+                .endDate(licence.getEndDate())
+                .idEmployee(licence.getEmployee().getId_employee())
+                .description(licence.getDescription())
+                .build();
     }
 
     public LicenseEntity getEntity(LicenseDTO license) {

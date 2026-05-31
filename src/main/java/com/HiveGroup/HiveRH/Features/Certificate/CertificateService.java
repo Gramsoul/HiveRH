@@ -2,6 +2,7 @@ package com.HiveGroup.HiveRH.Features.Certificate;
 
 
 import com.HiveGroup.HiveRH.Common.Utils.Exception.FileProcessingException;
+import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Common.Utils.Services.PdfLectorService;
 import com.HiveGroup.HiveRH.Features.Certificate.DTO.CertificateDTO;
 import com.HiveGroup.HiveRH.Features.Certificate.DTO.ResponseCertificateDTO;
@@ -33,7 +34,12 @@ public class CertificateService {
     }
 
     public CertificateDTO toDTO(CertificateEntity certificate) {
-        return certificateMapper.toDTO(certificate);
+        return CertificateDTO.builder()
+                .idCertificate(certificate.getId_certificate())
+                .idLicense(certificate.getLicense().getId_license())
+                .file(certificate.getFile())
+                .description(certificate.getDescription())
+                .build();
     }
 
     @Transactional
@@ -42,7 +48,8 @@ public class CertificateService {
 
         for (Long id : ids) {
             CertificateEntity cer =
-                    certificateRepository.findById(id).orElseThrow(() -> new CertificateNotFoundException(""));
+                    certificateRepository.findById(id)
+                            .orElseThrow(() -> new EntityNotFoundException("Certificado no encontrado","Certificate"));
             certificates.add(cer);
         }
 
@@ -65,7 +72,7 @@ public class CertificateService {
         try {
             byte[] pdf = pdfLectorService.savePDF(file);
             LicenseEntity license = licenseRepository.findById(idLicense)
-                    .orElseThrow(() -> new LicenseNotFoundException(""));
+                    .orElseThrow(() -> new EntityNotFoundException("Licencia no encontrada","License"));
 
             CertificateEntity certificate = CertificateEntity.builder()
                     .description(description)
@@ -83,12 +90,12 @@ public class CertificateService {
 
     public void deleteCertificate(Long id){
         CertificateEntity c = certificateRepository.findById(id)
-                .orElseThrow(() -> new CertificateNotFoundException(""));
+                .orElseThrow(() -> new EntityNotFoundException("Certificado no encontrado","Certificate"));
         certificateRepository.delete(c);
     }
 
     public ResponseCertificateDTO getInfoCertificate(Long id){
-        CertificateEntity c = certificateRepository.findById(id).orElseThrow(() -> new CertificateNotFoundException(""));
+        CertificateEntity c = certificateRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Certificado no encontrado","Certificate"));
         return ResponseCertificateDTO.builder()
                 .description(c.getDescription())
                 .idLicense(c.getLicense().getId_license())
@@ -97,7 +104,7 @@ public class CertificateService {
 
     public byte[] loadPDF(Long id){
         CertificateEntity c = certificateRepository.findById(id)
-                .orElseThrow(() -> new CertificateNotFoundException(""));
+                .orElseThrow(() -> new EntityNotFoundException("Certificado no encontrado","Certificate"));
         return  c.getFile();
     }
 
