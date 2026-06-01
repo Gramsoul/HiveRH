@@ -1,4 +1,4 @@
-package com.HiveGroup.HiveRH.Features.Varation;
+package com.HiveGroup.HiveRH.Features.Variation;
 
 import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;

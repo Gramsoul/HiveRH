@@ -1,4 +1,4 @@
-package com.HiveGroup.HiveRH.Features.Varation;
+package com.HiveGroup.HiveRH.Features.Variation;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,16 +11,17 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 public class VariationEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id_variation;
 
-    @Column(name = "title")
+    @Column(name = "title", nullable = false, length = 100)
     private String title;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 255)
     private String description;
 
-    @Column(name = "total")
-    private double total;
+    @Column(name = "total", nullable = false)
+    private Double total;
 }
