@@ -23,6 +23,7 @@ public class PayrollService {
     private final VariationRepository variationRepository;
     private final PayrollMapper payrollMapper;
 
+    //Crear una liquidación de sueldo
     @Transactional
     public PayrollResponse create(PayrollRequest request) {
 
@@ -74,6 +75,7 @@ public class PayrollService {
         return payrollMapper.toResponse(savedPayroll);
     }
 
+    //Buscar una liquidación por ID
     @Transactional(readOnly = true)
     public PayrollResponse findById(Long id) {
         PayrollEntity payroll = payrollRepository.findById(id)
@@ -82,6 +84,7 @@ public class PayrollService {
         return payrollMapper.toResponse(payroll);
     }
 
+    //Listar todas las liquidaciones
     @Transactional(readOnly = true)
     public List<PayrollResponse> findAll() {
         return payrollRepository.findAll()
@@ -90,6 +93,7 @@ public class PayrollService {
                 .toList();
     }
 
+    //Eliminar una liquidación
     @Transactional
     public PayrollResponse deleteById(Long id) {
         PayrollEntity payroll = payrollRepository.findById(id)
@@ -102,6 +106,7 @@ public class PayrollService {
         return response;
     }
 
+    //Buscar las variaciones por sus IDs
     private List<VariationEntity> getVariationsByIds(List<Long> ids) {
 
         if (ids == null || ids.isEmpty()) {
@@ -117,6 +122,7 @@ public class PayrollService {
         return variations;
     }
 
+    //Calcular el total final de la liquidación
     private Double calculatePayrollTotal(Double baseSalary, List<VariationEntity> variations) {
 
         Double total = baseSalary;
@@ -128,6 +134,7 @@ public class PayrollService {
         return total;
     }
 
+    //Evitar dos liquidaciones en el mismo mes
     private void validateEmployeeHasNoPayrollInSameMonth(Long idEmployee, LocalDate payrollDate) {
 
         LocalDate startDate = payrollDate.withDayOfMonth(1);
