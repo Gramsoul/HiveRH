@@ -9,6 +9,7 @@ import com.HiveGroup.HiveRH.Features.Variation.VariationEntity;
 import com.HiveGroup.HiveRH.Features.Variation.VariationRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,7 +23,16 @@ public class PayrollService {
     private final VariationRepository variationRepository;
     private final PayrollMapper payrollMapper;
 
+    @Transactional
     public PayrollResponse create(PayrollRequest request) {
+
+        if (request.getIdEmployee() == null) {
+            throw new RuntimeException("El empleado es obligatorio");
+        }
+
+        if (request.getPayrollDate() == null) {
+            throw new RuntimeException("La fecha de liquidación es obligatoria");
+        }
 
         EmployeeEntity employee = employeeRepository.findById(request.getIdEmployee())
                 .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
@@ -33,6 +43,10 @@ public class PayrollService {
 
         if (employee.getBaseSalary() == null || employee.getBaseSalary() <= 0) {
             throw new RuntimeException("El empleado no tiene un sueldo base válido");
+        }
+
+        if (employee.getHireDate() != null && request.getPayrollDate().isBefore(employee.getHireDate())) {
+            throw new RuntimeException("No se puede liquidar un sueldo antes de la fecha de contratación");
         }
 
         validateEmployeeHasNoPayrollInSameMonth(
@@ -60,6 +74,7 @@ public class PayrollService {
         return payrollMapper.toResponse(savedPayroll);
     }
 
+    @Transactional(readOnly = true)
     public PayrollResponse findById(Long id) {
         PayrollEntity payroll = payrollRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Liquidación no encontrada"));
@@ -67,6 +82,7 @@ public class PayrollService {
         return payrollMapper.toResponse(payroll);
     }
 
+    @Transactional(readOnly = true)
     public List<PayrollResponse> findAll() {
         return payrollRepository.findAll()
                 .stream()
@@ -74,13 +90,16 @@ public class PayrollService {
                 .toList();
     }
 
+    @Transactional
     public PayrollResponse deleteById(Long id) {
         PayrollEntity payroll = payrollRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Liquidación no encontrada"));
 
+        PayrollResponse response = payrollMapper.toResponse(payroll);
+
         payrollRepository.delete(payroll);
 
-        return payrollMapper.toResponse(payroll);
+        return response;
     }
 
     private List<VariationEntity> getVariationsByIds(List<Long> ids) {
