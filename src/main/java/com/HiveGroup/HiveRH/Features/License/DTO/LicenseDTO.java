@@ -1,4 +1,4 @@
-package com.HiveGroup.HiveRH.Features.License;
+package com.HiveGroup.HiveRH.Features.License.DTO;
 
 import lombok.*;
 
