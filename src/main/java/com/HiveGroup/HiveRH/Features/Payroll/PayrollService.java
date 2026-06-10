@@ -1,6 +1,7 @@
 package com.HiveGroup.HiveRH.Features.Payroll;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
+import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeRepository;
 import com.HiveGroup.HiveRH.Features.Payroll.DTO.PayrollRequest;
@@ -60,8 +61,7 @@ public class PayrollService {
     @Transactional(readOnly = true)
     public PayrollResponse findById(Long id) {
 
-        PayrollEntity payroll = payrollRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Liquidación no encontrada"));
+        PayrollEntity payroll = findPayrollById(id);
 
         return payrollMapper.toResponse(payroll);
     }
@@ -79,8 +79,7 @@ public class PayrollService {
     @Transactional
     public PayrollResponse deleteById(Long id) {
 
-        PayrollEntity payroll = payrollRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Liquidación no encontrada"));
+        PayrollEntity payroll = findPayrollById(id);
 
         PayrollResponse response = payrollMapper.toResponse(payroll);
 
@@ -89,15 +88,25 @@ public class PayrollService {
         return response;
     }
 
+    // Buscar liquidación
+    private PayrollEntity findPayrollById(Long id) {
+
+        return payrollRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Liquidación no encontrada",
+                        "Payroll"
+                ));
+    }
+
     // Validar datos obligatorios
     private void validateRequest(PayrollRequest request) {
 
         if (request.getIdEmployee() == null) {
-            throw new RuntimeException("El empleado es obligatorio");
+            throw new IllegalArgumentException("El empleado es obligatorio");
         }
 
         if (request.getPayrollDate() == null) {
-            throw new RuntimeException("La fecha de liquidación es obligatoria");
+            throw new IllegalArgumentException("La fecha de liquidación es obligatoria");
         }
     }
 
@@ -105,22 +114,25 @@ public class PayrollService {
     private EmployeeEntity findEmployeeById(Long idEmployee) {
 
         return employeeRepository.findById(idEmployee)
-                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Empleado no encontrado",
+                        "Employee"
+                ));
     }
 
     // Validar si el empleado puede recibir liquidación
     private void validateEmployeeCanReceivePayroll(EmployeeEntity employee, LocalDate payrollDate) {
 
         if (employee.getStatus() != StatusEnum.ACTIVE) {
-            throw new RuntimeException("No se puede liquidar sueldo a un empleado que no está activo");
+            throw new IllegalArgumentException("No se puede liquidar sueldo a un empleado que no está activo");
         }
 
         if (employee.getBaseSalary() == null || employee.getBaseSalary() <= 0) {
-            throw new RuntimeException("El empleado no tiene un sueldo base válido");
+            throw new IllegalArgumentException("El empleado no tiene un sueldo base válido");
         }
 
         if (employee.getHireDate() != null && payrollDate.isBefore(employee.getHireDate())) {
-            throw new RuntimeException("No se puede liquidar un sueldo antes de la fecha de contratación");
+            throw new IllegalArgumentException("No se puede liquidar un sueldo antes de la fecha de contratación");
         }
     }
 
@@ -137,7 +149,7 @@ public class PayrollService {
         );
 
         if (exists) {
-            throw new RuntimeException("El empleado ya tiene una liquidación registrada en ese mes");
+            throw new IllegalArgumentException("El empleado ya tiene una liquidación registrada en ese mes");
         }
     }
 
@@ -153,13 +165,16 @@ public class PayrollService {
                 .toList();
 
         if (uniqueIds.size() != ids.size()) {
-            throw new RuntimeException("No se puede repetir una misma variación en la liquidación");
+            throw new IllegalArgumentException("No se puede repetir una misma variación en la liquidación");
         }
 
         List<VariationEntity> variations = variationRepository.findAllById(uniqueIds);
 
         if (variations.size() != uniqueIds.size()) {
-            throw new RuntimeException("Una o más variaciones no existen");
+            throw new EntityNotFoundException(
+                    "Una o más variaciones no existen",
+                    "Variation"
+            );
         }
 
         return variations;
@@ -181,7 +196,7 @@ public class PayrollService {
     private void validatePayrollTotal(Double total) {
 
         if (total < 0) {
-            throw new RuntimeException("El total de la liquidación no puede ser negativo");
+            throw new IllegalArgumentException("El total de la liquidación no puede ser negativo");
         }
     }
 }
