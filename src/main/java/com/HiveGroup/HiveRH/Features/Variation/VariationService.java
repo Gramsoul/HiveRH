@@ -1,5 +1,6 @@
 package com.HiveGroup.HiveRH.Features.Variation;
 
+import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Features.Variation.DTO.VariationFilterDTO;
 import com.HiveGroup.HiveRH.Features.Variation.DTO.VariationRequest;
 import com.HiveGroup.HiveRH.Features.Variation.DTO.VariationResponse;
@@ -112,14 +113,17 @@ public class VariationService {
     private VariationEntity findVariationById(Long id) {
 
         return variationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Variación no encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Variación no encontrada",
+                        "Variation"
+                ));
     }
 
     // Validar título
     private void validateTitle(String title) {
 
         if (title == null || title.isBlank()) {
-            throw new RuntimeException("El título es obligatorio");
+            throw new IllegalArgumentException("El título es obligatorio");
         }
     }
 
@@ -127,11 +131,11 @@ public class VariationService {
     private void validateVariation(Double total) {
 
         if (total == null) {
-            throw new RuntimeException("El total es obligatorio");
+            throw new IllegalArgumentException("El total es obligatorio");
         }
 
-        if (total == 0) {
-            throw new RuntimeException("El total de la variación no puede ser cero");
+        if (total.equals(0.0)) {
+            throw new IllegalArgumentException("El total de la variación no puede ser cero");
         }
     }
 
