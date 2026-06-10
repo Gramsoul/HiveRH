@@ -8,6 +8,7 @@ import com.HiveGroup.HiveRH.Features.Complaint.ComplaintEntity;
 import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity;
 import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
 import com.HiveGroup.HiveRH.Features.Payroll.PayrollEntity;
+import com.HiveGroup.HiveRH.Features.Suspension.SuspensionEntity;
 import com.HiveGroup.HiveRH.Features.Vacation.VacationEntity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -84,6 +85,9 @@ public class EmployeeEntity {
 
     @OneToMany(mappedBy = "employee")
     private List<VacationEntity> vacations = null;
+
+    @OneToMany(mappedBy = "employee")
+    private List<SuspensionEntity> suspensions = null;
 
     @OneToMany(mappedBy = "employee")
     private List<ComplaintEntity> complaints = null;

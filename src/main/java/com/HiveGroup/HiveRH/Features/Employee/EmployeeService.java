@@ -2,6 +2,7 @@ package com.HiveGroup.HiveRH.Features.Employee;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
+import com.HiveGroup.HiveRH.Common.Utils.TextSearchUtils;
 import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
 import com.HiveGroup.HiveRH.Features.Account.AccountRepository;
 import com.HiveGroup.HiveRH.Features.Branch.BranchEntity;
@@ -172,6 +173,8 @@ public class EmployeeService {
 
         return employeeList.stream()
                 .map(this::toDTO)
+                .filter(employee -> TextSearchUtils.matchesFullName(employee.name(), employee.lastName(), filters.fullName()))
+                .filter(employee -> filters.dni() == null || employee.dni().equals(filters.dni()))
                 .filter(employee -> filters.id_branch() == null || employee.branch_id().equals(filters.id_branch()))
                 .filter(employee -> filters.hire_date() == null || employee.hireDate().equals(filters.hire_date()))
                 .filter(employee -> filters.termination_date() == null || employee.terminationDate().equals(filters.termination_date()))
