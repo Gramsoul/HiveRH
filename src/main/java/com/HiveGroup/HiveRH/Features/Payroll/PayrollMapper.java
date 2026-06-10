@@ -15,7 +15,7 @@ public class PayrollMapper {
                 ? List.of()
                 : payroll.getVariations()
                 .stream()
-                .map(VariationEntity::getId_variation)
+                .map(VariationEntity::getIdVariation)
                 .toList();
 
         return PayrollResponse.builder()
@@ -28,5 +28,11 @@ public class PayrollMapper {
                 )
                 .idVariations(idVariations)
                 .build();
+    }
+
+    public List<PayrollResponse> toResponseList(List<PayrollEntity> payrolls) {
+        return payrolls.stream()
+                .map(this::toResponse)
+                .toList();
     }
 }

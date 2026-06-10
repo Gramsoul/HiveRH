@@ -23,35 +23,18 @@ public class PayrollService {
     private final VariationRepository variationRepository;
     private final PayrollMapper payrollMapper;
 
-    //Crear una liquidación de sueldo
+    // Crear una liquidación de sueldo
     @Transactional
     public PayrollResponse create(PayrollRequest request) {
 
-        if (request.getIdEmployee() == null) {
-            throw new RuntimeException("El empleado es obligatorio");
-        }
+        validateRequest(request);
 
-        if (request.getPayrollDate() == null) {
-            throw new RuntimeException("La fecha de liquidación es obligatoria");
-        }
+        EmployeeEntity employee = findEmployeeById(request.getIdEmployee());
 
-        EmployeeEntity employee = employeeRepository.findById(request.getIdEmployee())
-                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
-
-        if (employee.getStatus() != StatusEnum.ACTIVE) {
-            throw new RuntimeException("No se puede liquidar sueldo a un empleado que no está activo");
-        }
-
-        if (employee.getBaseSalary() == null || employee.getBaseSalary() <= 0) {
-            throw new RuntimeException("El empleado no tiene un sueldo base válido");
-        }
-
-        if (employee.getHireDate() != null && request.getPayrollDate().isBefore(employee.getHireDate())) {
-            throw new RuntimeException("No se puede liquidar un sueldo antes de la fecha de contratación");
-        }
+        validateEmployeeCanReceivePayroll(employee, request.getPayrollDate());
 
         validateEmployeeHasNoPayrollInSameMonth(
-                employee.getId_employee(),
+                employee,
                 request.getPayrollDate()
         );
 
@@ -59,9 +42,7 @@ public class PayrollService {
 
         Double total = calculatePayrollTotal(employee.getBaseSalary(), variations);
 
-        if (total < 0) {
-            throw new RuntimeException("El total de la liquidación no puede ser negativo");
-        }
+        validatePayrollTotal(total);
 
         PayrollEntity payroll = PayrollEntity.builder()
                 .employee(employee)
@@ -75,27 +56,29 @@ public class PayrollService {
         return payrollMapper.toResponse(savedPayroll);
     }
 
-    //Buscar una liquidación por ID
+    // Buscar una liquidación por ID
     @Transactional(readOnly = true)
     public PayrollResponse findById(Long id) {
+
         PayrollEntity payroll = payrollRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Liquidación no encontrada"));
 
         return payrollMapper.toResponse(payroll);
     }
 
-    //Listar todas las liquidaciones
+    // Listar todas las liquidaciones
     @Transactional(readOnly = true)
     public List<PayrollResponse> findAll() {
-        return payrollRepository.findAll()
-                .stream()
-                .map(payrollMapper::toResponse)
-                .toList();
+
+        List<PayrollEntity> payrolls = payrollRepository.findAll();
+
+        return payrollMapper.toResponseList(payrolls);
     }
 
-    //Eliminar una liquidación
+    // Eliminar una liquidación
     @Transactional
     public PayrollResponse deleteById(Long id) {
+
         PayrollEntity payroll = payrollRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Liquidación no encontrada"));
 
@@ -106,23 +89,83 @@ public class PayrollService {
         return response;
     }
 
-    //Buscar las variaciones por sus IDs
+    // Validar datos obligatorios
+    private void validateRequest(PayrollRequest request) {
+
+        if (request.getIdEmployee() == null) {
+            throw new RuntimeException("El empleado es obligatorio");
+        }
+
+        if (request.getPayrollDate() == null) {
+            throw new RuntimeException("La fecha de liquidación es obligatoria");
+        }
+    }
+
+    // Buscar empleado
+    private EmployeeEntity findEmployeeById(Long idEmployee) {
+
+        return employeeRepository.findById(idEmployee)
+                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+    }
+
+    // Validar si el empleado puede recibir liquidación
+    private void validateEmployeeCanReceivePayroll(EmployeeEntity employee, LocalDate payrollDate) {
+
+        if (employee.getStatus() != StatusEnum.ACTIVE) {
+            throw new RuntimeException("No se puede liquidar sueldo a un empleado que no está activo");
+        }
+
+        if (employee.getBaseSalary() == null || employee.getBaseSalary() <= 0) {
+            throw new RuntimeException("El empleado no tiene un sueldo base válido");
+        }
+
+        if (employee.getHireDate() != null && payrollDate.isBefore(employee.getHireDate())) {
+            throw new RuntimeException("No se puede liquidar un sueldo antes de la fecha de contratación");
+        }
+    }
+
+    // Evitar dos liquidaciones en el mismo mes
+    private void validateEmployeeHasNoPayrollInSameMonth(EmployeeEntity employee, LocalDate payrollDate) {
+
+        LocalDate startDate = payrollDate.withDayOfMonth(1);
+        LocalDate endDate = payrollDate.withDayOfMonth(payrollDate.lengthOfMonth());
+
+        boolean exists = payrollRepository.existsByEmployeeAndPayrollDateBetween(
+                employee,
+                startDate,
+                endDate
+        );
+
+        if (exists) {
+            throw new RuntimeException("El empleado ya tiene una liquidación registrada en ese mes");
+        }
+    }
+
+    // Buscar las variaciones por sus IDs
     private List<VariationEntity> getVariationsByIds(List<Long> ids) {
 
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }
 
-        List<VariationEntity> variations = variationRepository.findAllById(ids);
+        List<Long> uniqueIds = ids.stream()
+                .distinct()
+                .toList();
 
-        if (variations.size() != ids.size()) {
+        if (uniqueIds.size() != ids.size()) {
+            throw new RuntimeException("No se puede repetir una misma variación en la liquidación");
+        }
+
+        List<VariationEntity> variations = variationRepository.findAllById(uniqueIds);
+
+        if (variations.size() != uniqueIds.size()) {
             throw new RuntimeException("Una o más variaciones no existen");
         }
 
         return variations;
     }
 
-    //Calcular el total final de la liquidación
+    // Calcular el total final de la liquidación
     private Double calculatePayrollTotal(Double baseSalary, List<VariationEntity> variations) {
 
         Double total = baseSalary;
@@ -134,20 +177,11 @@ public class PayrollService {
         return total;
     }
 
-    //Evitar dos liquidaciones en el mismo mes
-    private void validateEmployeeHasNoPayrollInSameMonth(Long idEmployee, LocalDate payrollDate) {
+    // Validar total final
+    private void validatePayrollTotal(Double total) {
 
-        LocalDate startDate = payrollDate.withDayOfMonth(1);
-        LocalDate endDate = payrollDate.withDayOfMonth(payrollDate.lengthOfMonth());
-
-        boolean exists = payrollRepository.existsPayrollInMonth(
-                idEmployee,
-                startDate,
-                endDate
-        );
-
-        if (exists) {
-            throw new RuntimeException("El empleado ya tiene una liquidación registrada en ese mes");
+        if (total < 0) {
+            throw new RuntimeException("El total de la liquidación no puede ser negativo");
         }
     }
 }

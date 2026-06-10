@@ -17,7 +17,7 @@ public class VariationMapper {
 
     public VariationResponse toResponse(VariationEntity variation) {
         return VariationResponse.builder()
-                .idVariation(variation.getId_variation())
+                .idVariation(variation.getIdVariation())
                 .title(variation.getTitle())
                 .description(variation.getDescription())
                 .total(variation.getTotal())

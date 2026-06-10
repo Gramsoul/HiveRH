@@ -8,13 +8,14 @@ import lombok.*;
 @Getter
 @Setter
 @AllArgsConstructor
-@Builder
 @NoArgsConstructor
+@Builder
 public class VariationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_variation;
+    @Column(name = "id_variation")
+    private Long idVariation;
 
     @Column(name = "title", nullable = false, length = 100)
     private String title;

@@ -4,8 +4,7 @@ import com.HiveGroup.HiveRH.Features.Variation.DTO.VariationFilterDTO;
 import com.HiveGroup.HiveRH.Features.Variation.DTO.VariationRequest;
 import com.HiveGroup.HiveRH.Features.Variation.DTO.VariationResponse;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,13 +13,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/variations")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class VariationController {
 
     private final VariationService variationService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<VariationResponse> getVariationById(@NonNull @PathVariable Long id) {
+    public ResponseEntity<VariationResponse> getVariationById(@PathVariable Long id) {
         return ResponseEntity.ok(variationService.findById(id));
     }
 
@@ -40,7 +39,7 @@ public class VariationController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<VariationResponse> patchVariation(
-            @NonNull @PathVariable Long id,
+            @PathVariable Long id,
             @RequestBody VariationRequest request
     ) {
         return ResponseEntity.ok(variationService.patchById(id, request));
@@ -48,14 +47,14 @@ public class VariationController {
 
     @PutMapping("/{id}")
     public ResponseEntity<VariationResponse> putVariation(
-            @NonNull @PathVariable Long id,
-            @RequestBody VariationRequest request
+            @PathVariable Long id,
+            @Valid @RequestBody VariationRequest request
     ) {
         return ResponseEntity.ok(variationService.putById(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<VariationResponse> deleteVariation(@NonNull @PathVariable Long id) {
+    public ResponseEntity<VariationResponse> deleteVariation(@PathVariable Long id) {
         return ResponseEntity.ok(variationService.deleteById(id));
     }
 }
