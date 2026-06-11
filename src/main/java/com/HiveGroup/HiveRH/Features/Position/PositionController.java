@@ -1,0 +1,34 @@
+package com.HiveGroup.HiveRH.Features.Position;
+
+import com.HiveGroup.HiveRH.Features.Position.DTO.PositionFilterDTO;
+import com.HiveGroup.HiveRH.Features.Position.DTO.PositionRequestDTO;
+import com.HiveGroup.HiveRH.Features.Position.DTO.PositionResponseDTO;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/position")
+@AllArgsConstructor
+public class PositionController {
+    private final PositionService positionService;
+
+    @GetMapping
+    public ResponseEntity<List<PositionResponseDTO>> getPositions(PositionFilterDTO filters) {
+        return ResponseEntity.ok(positionService.findAllByFilter(filters));
+    }
+
+    @PostMapping
+    public ResponseEntity<PositionResponseDTO> createPosition(@NonNull @RequestBody PositionRequestDTO request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(positionService.create(request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<PositionResponseDTO> deletePosition(@NonNull @PathVariable Long id) {
+        return ResponseEntity.ok(positionService.deleteById(id));
+    }
+}
