@@ -2,6 +2,7 @@ package com.HiveGroup.HiveRH.Features.Complaint;
 
 import com.HiveGroup.HiveRH.Features.Complaint.DTO.ComplaintRequest;
 import com.HiveGroup.HiveRH.Features.Complaint.DTO.ComplaintResponse;
+import com.HiveGroup.HiveRH.Features.Complaint.DTO.ComplaintFilterDTO;
 import com.HiveGroup.HiveRH.Features.Complaint.DTO.ComplaintStatusRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,20 +21,9 @@ public class ComplaintController {
 
     // GET - api/complaint
     @GetMapping
-    public ResponseEntity<List<ComplaintResponse>> findAll() {
+    public ResponseEntity<List<ComplaintResponse>> findAll(ComplaintFilterDTO filters) {
 
-        List<ComplaintResponse> response = complaintService.findAll();
-
-        return ResponseEntity.ok(response);
-    }
-
-    // GET - api/complaint/{id_complaint}
-    @GetMapping("/{id_complaint}")
-    public ResponseEntity<ComplaintResponse> findById(
-            @PathVariable("id_complaint") Long idComplaint
-    ) {
-
-        ComplaintResponse response = complaintService.findById(idComplaint);
+        List<ComplaintResponse> response = complaintService.findAllByFilter(filters);
 
         return ResponseEntity.ok(response);
     }

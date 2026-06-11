@@ -2,6 +2,7 @@ package com.HiveGroup.HiveRH.Features.Complaint;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
+import com.HiveGroup.HiveRH.Features.Complaint.DTO.ComplaintFilterDTO;
 import com.HiveGroup.HiveRH.Features.Complaint.DTO.ComplaintRequest;
 import com.HiveGroup.HiveRH.Features.Complaint.DTO.ComplaintResponse;
 import com.HiveGroup.HiveRH.Features.Complaint.DTO.ComplaintStatusRequest;
@@ -49,11 +50,22 @@ public class ComplaintService {
 
 
     @Transactional(readOnly = true)
-    public List<ComplaintResponse> findAll() {
+    public List<ComplaintResponse> findAllByFilter(ComplaintFilterDTO filters) {
 
-        List<ComplaintEntity> complaints = complaintRepository.findAll();
+        ComplaintFilterDTO activeFilters = filters != null
+                ? filters
+                : new ComplaintFilterDTO(null, null, null, null, null);
 
-        return complaintMapper.toResponseList(complaints);
+        validateDateRange(activeFilters);
+
+        return complaintRepository.findAll()
+                .stream()
+                .filter(complaint -> filterById(complaint, activeFilters.idComplaint()))
+                .filter(complaint -> filterByTitle(complaint, activeFilters.title()))
+                .filter(complaint -> filterByStatus(complaint, activeFilters.status()))
+                .filter(complaint -> filterByDateRange(complaint, activeFilters))
+                .map(complaintMapper::toResponse)
+                .toList();
     }
 
 
@@ -121,5 +133,52 @@ public class ComplaintService {
         if (status == null) {
             throw new IllegalArgumentException("El estado de la denuncia es obligatorio");
         }
+    }
+
+
+    private void validateDateRange(ComplaintFilterDTO filters) {
+
+        if (filters.startDate() != null
+                && filters.endDate() != null
+                && filters.endDate().isBefore(filters.startDate())) {
+            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio");
+        }
+    }
+
+
+    private boolean filterById(ComplaintEntity complaint, Long idComplaint) {
+
+        return idComplaint == null || complaint.getId_complaint().equals(idComplaint);
+    }
+
+
+    private boolean filterByTitle(ComplaintEntity complaint, String title) {
+
+        if (title == null || title.isBlank()) {
+            return true;
+        }
+
+        return complaint.getTitle()
+                .toLowerCase()
+                .contains(title.toLowerCase());
+    }
+
+
+    private boolean filterByStatus(ComplaintEntity complaint, ComplaintStatusEnum status) {
+
+        return status == null || complaint.getStatus() == status;
+    }
+
+
+    private boolean filterByDateRange(ComplaintEntity complaint, ComplaintFilterDTO filters) {
+
+        if (filters.startDate() == null && filters.endDate() == null) {
+            return true;
+        }
+
+        boolean afterStartDate = filters.startDate() == null || !complaint.getDate().isBefore(filters.startDate());
+        boolean beforeEndDate = filters.endDate() == null || !complaint.getDate().isAfter(filters.endDate());
+
+        return afterStartDate && beforeEndDate;
     }
 }
