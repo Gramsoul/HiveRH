@@ -4,11 +4,9 @@ import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Features.Certificate.CertificateEntity;
 import com.HiveGroup.HiveRH.Features.Certificate.CertificateService;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
-import com.HiveGroup.HiveRH.Features.Employee.EmployeeNotFoundException;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeRepository;
 import com.HiveGroup.HiveRH.Features.License.DTO.LicenseDTO;
 import com.HiveGroup.HiveRH.Features.License.DTO.RequestLicenseDTO;
-import com.HiveGroup.HiveRH.Features.License.DTO.ResponseLicenseDTO;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +71,7 @@ public class LicenseService {
         if (licenseDTO.getId() != null) {
             EmployeeEntity employee = employeeRepository
                     .findById(licenseDTO.getIdEmployee())
-                    .orElseThrow(() -> new EmployeeNotFoundException(""));
+                    .orElseThrow(() -> new EntityNotFoundException("Employee not found", "Employee"));
 
             ori.setEmployee(employee);
         }
