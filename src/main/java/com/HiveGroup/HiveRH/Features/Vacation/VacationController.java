@@ -1,5 +1,6 @@
 package com.HiveGroup.HiveRH.Features.Vacation;
 
+import com.HiveGroup.HiveRH.Features.Vacation.DTO.VacationFilterDTO;
 import com.HiveGroup.HiveRH.Features.Vacation.DTO.VacationRequest;
 import com.HiveGroup.HiveRH.Features.Vacation.DTO.VacationResponse;
 import jakarta.validation.Valid;
@@ -18,17 +19,9 @@ public class VacationController {
     private final VacationService vacationService;
 
     @GetMapping
-    public ResponseEntity<List<VacationResponse>> findAll() {
+    public ResponseEntity<List<VacationResponse>> findAll(VacationFilterDTO filters) {
 
-        List<VacationResponse> response = vacationService.findAll();
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/{id_vacation}")
-    public ResponseEntity<VacationResponse> findById(@PathVariable("id_vacation") Long idVacation) {
-
-        VacationResponse response = vacationService.findById(idVacation);
+        List<VacationResponse> response = vacationService.findAllByFilter(filters);
 
         return ResponseEntity.ok(response);
     }
