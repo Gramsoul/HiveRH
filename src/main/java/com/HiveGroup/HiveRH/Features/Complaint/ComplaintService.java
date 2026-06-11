@@ -21,7 +21,7 @@ public class ComplaintService {
     private final EmployeeRepository employeeRepository;
     private final ComplaintMapper complaintMapper;
 
-    // Crear una denuncia
+
     @Transactional
     public ComplaintResponse create(ComplaintRequest request) {
 
@@ -38,7 +38,7 @@ public class ComplaintService {
         return complaintMapper.toResponse(savedComplaint);
     }
 
-    // Buscar una denuncia por ID
+
     @Transactional(readOnly = true)
     public ComplaintResponse findById(Long idComplaint) {
 
@@ -47,7 +47,7 @@ public class ComplaintService {
         return complaintMapper.toResponse(complaint);
     }
 
-    // Listar todas las denuncias
+
     @Transactional(readOnly = true)
     public List<ComplaintResponse> findAll() {
 
@@ -56,7 +56,7 @@ public class ComplaintService {
         return complaintMapper.toResponseList(complaints);
     }
 
-    // Actualizar el estado de una denuncia
+
     @Transactional
     public ComplaintResponse updateStatus(Long idComplaint, ComplaintStatusRequest request) {
 
@@ -71,7 +71,7 @@ public class ComplaintService {
         return complaintMapper.toResponse(updatedComplaint);
     }
 
-    // Buscar denuncia o lanzar error
+
     private ComplaintEntity findComplaintById(Long idComplaint) {
 
         return complaintRepository.findById(idComplaint)
@@ -81,7 +81,7 @@ public class ComplaintService {
                 ));
     }
 
-    // Buscar empleado o lanzar error
+
     private EmployeeEntity findEmployeeById(Long idEmployee) {
 
         return employeeRepository.findById(idEmployee)
@@ -91,7 +91,7 @@ public class ComplaintService {
                 ));
     }
 
-    // Validar datos obligatorios
+
     private void validateRequest(ComplaintRequest request) {
 
         if (request.title() == null || request.title().isBlank()) {
@@ -107,7 +107,7 @@ public class ComplaintService {
         }
     }
 
-    // Validar que el empleado pueda tener una denuncia asociada
+
     private void validateEmployeeCanHaveComplaint(EmployeeEntity employee) {
 
         if (employee.getStatus() != StatusEnum.ACTIVE) {
@@ -115,7 +115,7 @@ public class ComplaintService {
         }
     }
 
-    // Validar estado
+
     private void validateStatus(ComplaintStatusEnum status) {
 
         if (status == null) {

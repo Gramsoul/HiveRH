@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -40,5 +41,19 @@ public class GlobalExceptionHandler {
         error.setProperty("method", request.getMethod());
 
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> accessDenied(AccessDeniedException e, HttpServletRequest request) {
+        ProblemDetail error = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
+
+        error.setTitle(HttpStatus.FORBIDDEN.getReasonPhrase());
+        error.setDetail(e.getMessage());
+
+        error.setProperty("timestamp", Instant.now());
+        error.setProperty("path", request.getRequestURI());
+        error.setProperty("method", request.getMethod());
+
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 }
