@@ -69,7 +69,7 @@ El login genera un token JWT.
 Luego, cada request protegida debe enviar el token en el header Authorization con el siguiente formato:
 
 ```http
-Authorization: Bearer
+Authorization: Bearer <token>
 ```
 
 ### @PreAuthorize
@@ -80,7 +80,7 @@ Se utiliza para validar el acceso a determinados recursos, como empleados, licen
 
 Los endpoints que no tienen una regla específica igualmente requieren un token válido.
 
-Algunos módulos, como payroll, vacation y complaint, quedan protegidos por autenticación general, aunque no necesariamente diferenciados por rol.
+Los módulos principales combinan reglas por rol en la configuración HTTP con validaciones por método mediante @PreAuthorize. Por ejemplo, payroll queda reservado para ADMIN/RRHH salvo la consulta de liquidaciones propias por empleado; vacation, license y complaint permiten crear recursos propios cuando el SecurityAuthorizationService lo autoriza.
 
 ---
 
@@ -223,7 +223,7 @@ Al registrar una suspensión, el sistema cambia automáticamente el estado del e
 ## 4. Gestión de empleados
 
 - RRHH o ADMIN pueden listar empleados y filtrarlos por nombre, DNI, sucursal, fecha de ingreso, estado, puesto, departamento o rango salarial.
-- PATCH permite actualizar datos puntuales sin enviar todo el objeto. En el controlador actual, PUT también invoca la lógica parcial de actualización.
+- PATCH permite actualizar datos puntuales sin enviar todo el objeto. PUT realiza una actualización completa de los campos principales del empleado.
 - DELETE no borra físicamente al empleado: cambia su estado a TERMINATED.
 - El empleado autenticado puede consultar su propio perfil con GET /api/employees/me.
 
@@ -472,15 +472,19 @@ Elimina una variación salarial.
 
 Lista las liquidaciones de sueldo registradas en el sistema.
 
-### GET /api/payrolls/{id}
+### GET /api/payrolls/employee/{id_employee}
 
-Consulta una liquidación de sueldo específica por su ID.
+Consulta las liquidaciones de sueldo de un empleado. ADMIN y RRHH pueden consultar cualquier empleado; EMPLOYEE solo puede consultar las liquidaciones asociadas a su propio usuario.
 
 ### POST /api/payrolls
 
 Crea una nueva liquidación de sueldo.
 
 El sistema calcula el total tomando el sueldo base del empleado y aplicando las variaciones salariales correspondientes.
+
+### PUT /api/payrolls/{id}
+
+Actualiza una liquidación de sueldo existente recalculando el total según el empleado, la fecha y las variaciones enviadas.
 
 ### DELETE /api/payrolls/{id}
 
@@ -671,7 +675,7 @@ Body:
 ```json
 {
   "identifier": "admin",
-  "password": "123456"
+  "password": "123"
 }
 ```
 
@@ -704,7 +708,7 @@ Body:
 
 Método: POST
 
-Endpoint: /api/Branch
+Endpoint: /api/branch
 
 Permite crear una nueva sucursal.
 
@@ -878,6 +882,22 @@ Body:
 
 ---
 
+## Consultar liquidaciones de un empleado
+
+Método: GET
+
+Endpoint: /api/payrolls/employee/1
+
+Permite consultar las liquidaciones de un empleado. Acepta filtros opcionales por rango de fechas.
+
+Ejemplo:
+
+```http
+GET /api/payrolls/employee/1?startDate=2026-01-01&endDate=2026-06-30
+```
+
+---
+
 ## Registrar vacaciones
 
 Método: POST
@@ -1019,7 +1039,7 @@ Body:
 
 Método: POST
 
-Endpoint: /api/suspensión
+Endpoint: /api/suspension
 
 Permite registrar una suspensión para un empleado.
 

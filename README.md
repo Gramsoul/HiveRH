@@ -11,13 +11,13 @@ La documentacion detallada esta en la carpeta `docs`:
 - `docs/Requerimiento.md`: alcance funcional y reglas generales del sistema.
 - `docs/Informe_Entidades_Endpoints.md`: recorrido completo del sistema, entidades, endpoints y flujo recomendado para Postman/defensa.
 - `docs/Conceptual.md`: modelo conceptual del dominio.
-- `docs/DER.pdf`: diagrama entidad-relacion.
+- `docs/DER.pdf`: exportacion PDF del diagrama, mantenida como material complementario.
 
 Este README queda como guia rapida para levantar y entender el proyecto. Para el detalle completo de endpoints conviene ir al informe.
 
 ## Requisitos
 
-- JDK compatible con el proyecto.
+- JDK 21, de acuerdo con la configuracion actual de compilacion del `pom.xml`.
 - MySQL corriendo localmente o en un servidor accesible.
 - Maven Wrapper incluido en el repositorio (`mvnw.cmd` / `mvnw`), o Maven instalado.
 - Variables de entorno configuradas en el entorno de ejecucion elegido.

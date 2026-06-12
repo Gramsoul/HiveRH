@@ -6,11 +6,9 @@ Account {
 varchar user
 varchar email
 varchar password
+varchar rol
+varchar status
 }
-
-    Rol {
-        varchar Type "Admin, RRHH"
-    }
 
     Branch {
         varchar name
@@ -20,10 +18,9 @@ varchar password
     }
 
     Variation {
-        varchar name
+        varchar title
         varchar description
         decimal total
-        boolean fixed
     }
 
     Payroll {
@@ -56,6 +53,12 @@ varchar password
         varchar status
     }
 
+    EmployeeAssignment {
+        int id_employee
+        int id_department
+        int id_position
+    }
+
     Vacation {
         date request_date
         boolean accepted
@@ -79,31 +82,40 @@ varchar password
     }
 
     Complaint {
-        varchar file
+        varchar title
         varchar description
+        date date
+        varchar status
     }
 
-    %% Relaciones de Rol (Admin, RRHH)
-    Rol ||--o{ Account : "TIENE"
-    Rol ||--o{ Branch : "CREA / ELIMINA"
-    Rol ||--o{ Department : "CREA / ELIMINA"
-    Rol ||--o{ Position : "CREA / ELIMINA"
-    Rol ||--o{ Employee : "CREA / ELIMINA / CONSULTA / MODIFICA"
-    Rol ||--o{ Vacation : "ACEPTA / CONSULTA"
-    Rol ||--o{ License : "ACEPTA / CONSULTA"
-    Rol ||--o{ Payroll : "CONSULTA"
+    Suspension {
+        varchar motive
+        date start_date
+        date end_date
+    }
+
+    PayrollVariation {
+        int id_payroll
+        int id_variation
+    }
+
+    %% Roles del sistema
+    %% ADMIN, RRHH y EMPLOYEE se modelan como enum dentro de Account.
 
     %% Relaciones de Employee
-    Employee ||--|| Account : "TIENE"
+    Employee |o--o| Account : "TIENE"
     Branch ||--o{ Employee : "TIENE"
-    Department ||--o{ Employee : "PERTENECE"
-    Position ||--o{ Employee : "TIENE"
+    Employee ||--o{ EmployeeAssignment : "TIENE"
+    Department ||--o{ EmployeeAssignment : "ASIGNA"
+    Position ||--o{ EmployeeAssignment : "ASIGNA"
     Employee ||--o{ Vacation : "PIDE / CONSULTA / ELIMINA"
     Employee ||--o{ License : "PIDE / CONSULTA / ELIMINA"
     Employee ||--o{ Complaint : "REALIZA"
     Employee ||--o{ Payroll : "TIENE"
+    Employee ||--o{ Suspension : "PUEDE RECIBIR"
 
     %% Otras Relaciones
-    License ||--o| Certificate : "Tiene"
-    Payroll ||--o{ Variation : "TIENE"
+    License ||--o{ Certificate : "TIENE"
+    Payroll ||--o{ PayrollVariation : "TIENE"
+    Variation ||--o{ PayrollVariation : "APLICA"
 ```

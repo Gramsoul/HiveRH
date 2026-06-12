@@ -88,7 +88,6 @@ Funciones principales:
 - Solicitar vacaciones.
 - Solicitar licencias.
 - Realizar denuncias.
-- Solicitar traslados internos.
 
 ---
 
@@ -207,8 +206,7 @@ El sistema permite:
 - Filtrar por empleado.
 - Filtrar por fecha.
 - Filtrar por estado.
-- Aceptar solicitudes.
-- Rechazar solicitudes.
+- Actualizar el estado de aceptación de las solicitudes.
 
 ---
 
@@ -255,8 +253,6 @@ Al crear una suspensión, se debe indicar:
 
 Cuando se registra la suspensión, el estado del empleado cambia automáticamente a **SUSPENDED**.
 
-También se contempla el envío automático de un email informando la suspensión.
-
 ---
 
 ## Funcionalidades para empleados
@@ -300,19 +296,6 @@ El empleado puede solicitar una licencia indicando las fechas correspondientes.
 También puede adjuntar certificados cuando sea necesario.
 
 La solicitud queda pendiente de aprobación por parte de RRHH.
-
----
-
-### Solicitar traslado interno
-
-El empleado puede solicitar un cambio interno dentro de la empresa.
-
-La solicitud puede estar relacionada con:
-
-- Sucursal.
-- Departamento.
-- Área.
-- Puesto.
 
 ---
 
