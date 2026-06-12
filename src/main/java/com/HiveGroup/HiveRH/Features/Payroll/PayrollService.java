@@ -4,6 +4,7 @@ import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeRepository;
+import com.HiveGroup.HiveRH.Features.Payroll.DTO.PayrollFilterDTO;
 import com.HiveGroup.HiveRH.Features.Payroll.DTO.PayrollRequest;
 import com.HiveGroup.HiveRH.Features.Payroll.DTO.PayrollResponse;
 import com.HiveGroup.HiveRH.Features.Variation.VariationEntity;
@@ -36,7 +37,8 @@ public class PayrollService {
 
         validateEmployeeHasNoPayrollInSameMonth(
                 employee,
-                request.getPayrollDate()
+                request.getPayrollDate(),
+                null
         );
 
         List<VariationEntity> variations = getVariationsByIds(request.getIdVariations());
@@ -57,15 +59,6 @@ public class PayrollService {
         return payrollMapper.toResponse(savedPayroll);
     }
 
-    // Buscar una liquidación por ID
-    @Transactional(readOnly = true)
-    public PayrollResponse findById(Long id) {
-
-        PayrollEntity payroll = findPayrollById(id);
-
-        return payrollMapper.toResponse(payroll);
-    }
-
     // Listar todas las liquidaciones
     @Transactional(readOnly = true)
     public List<PayrollResponse> findAll() {
@@ -73,6 +66,59 @@ public class PayrollService {
         List<PayrollEntity> payrolls = payrollRepository.findAll();
 
         return payrollMapper.toResponseList(payrolls);
+    }
+
+    // Listar liquidaciones de un empleado con filtros opcionales
+    @Transactional(readOnly = true)
+    public List<PayrollResponse> findAllByEmployee(Long idEmployee, PayrollFilterDTO filters) {
+
+        EmployeeEntity employee = findEmployeeById(idEmployee);
+
+        PayrollFilterDTO activeFilters = filters != null
+                ? filters
+                : new PayrollFilterDTO(null, null);
+
+        validateFilterDateRange(activeFilters);
+
+        return payrollRepository.findByEmployee(employee)
+                .stream()
+                .filter(payroll -> filterByDateRange(payroll, activeFilters))
+                .map(payrollMapper::toResponse)
+                .toList();
+    }
+
+    // Actualizar una liquidación
+    @Transactional
+    public PayrollResponse updateById(Long id, PayrollRequest request) {
+
+        validateRequest(request);
+
+        PayrollEntity payroll = findPayrollById(id);
+
+        EmployeeEntity employee = findEmployeeById(request.getIdEmployee());
+
+        validateEmployeeCanReceivePayroll(employee, request.getPayrollDate());
+
+        validateEmployeeHasNoPayrollInSameMonth(
+                employee,
+                request.getPayrollDate(),
+                id
+        );
+
+        List<VariationEntity> variations = getVariationsByIds(request.getIdVariations());
+
+        Double total = calculatePayrollTotal(employee.getBaseSalary(), variations);
+
+        validatePayrollTotal(total);
+
+        payroll.setEmployee(employee);
+        payroll.setPayrollDate(request.getPayrollDate());
+        payroll.setTotal(total);
+        payroll.setVariations(variations);
+
+        PayrollEntity updatedPayroll = payrollRepository.save(payroll);
+
+        return payrollMapper.toResponse(updatedPayroll);
     }
 
     // Eliminar una liquidación
@@ -137,14 +183,20 @@ public class PayrollService {
     }
 
     // Evitar dos liquidaciones en el mismo mes
-    private void validateEmployeeHasNoPayrollInSameMonth(EmployeeEntity employee, LocalDate payrollDate) {
+    private void validateEmployeeHasNoPayrollInSameMonth(
+            EmployeeEntity employee,
+            LocalDate payrollDate,
+            Long idPayrollToIgnore
+    ) {
 
         LocalDate startDate = payrollDate.withDayOfMonth(1);
         LocalDate endDate = payrollDate.withDayOfMonth(payrollDate.lengthOfMonth());
 
-        boolean exists = !payrollRepository
+        boolean exists = payrollRepository
                 .findByEmployeeAndPayrollDateBetween(employee, startDate, endDate)
-                .isEmpty();
+                .stream()
+                .anyMatch(payroll -> idPayrollToIgnore == null
+                        || !payroll.getId_payroll().equals(idPayrollToIgnore));
 
         if (exists) {
             throw new IllegalArgumentException("El empleado ya tiene una liquidación registrada en ese mes");
@@ -196,5 +248,26 @@ public class PayrollService {
         if (total < 0) {
             throw new IllegalArgumentException("El total de la liquidación no puede ser negativo");
         }
+    }
+
+    private void validateFilterDateRange(PayrollFilterDTO filters) {
+
+        if (filters.startDate() != null
+                && filters.endDate() != null
+                && filters.endDate().isBefore(filters.startDate())) {
+            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio");
+        }
+    }
+
+    private boolean filterByDateRange(PayrollEntity payroll, PayrollFilterDTO filters) {
+
+        if (filters.startDate() == null && filters.endDate() == null) {
+            return true;
+        }
+
+        boolean afterStartDate = filters.startDate() == null || !payroll.getPayrollDate().isBefore(filters.startDate());
+        boolean beforeEndDate = filters.endDate() == null || !payroll.getPayrollDate().isAfter(filters.endDate());
+
+        return afterStartDate && beforeEndDate;
     }
 }
