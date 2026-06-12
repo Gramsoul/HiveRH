@@ -182,6 +182,7 @@ public class EmployeeService {
         return toDTO(employee);
     }
 
+    @Transactional(readOnly = true)
     public EmployeeResponseDTO findCurrentEmployee() {
         AccountEntity account = getCurrentAccount();
         if (account.getEmployee() == null) {
