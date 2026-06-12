@@ -1,6 +1,30 @@
 # HiveRH
 This is a software solution designed for employee management, developed by the Human Resources department.
 
+## Documentacion
+
+La documentacion funcional y de diagramas del proyecto se encuentra en la carpeta `docs`.
+
+- `docs/Requerimiento.md`: relevamiento funcional y alcance del sistema.
+- `docs/Conceptual.md`: diagrama conceptual del dominio.
+- `docs/ERD.md`: diagrama entidad-relacion de la base de datos.
+
+Los diagramas estan documentados con Mermaid. Mermaid es un lenguaje declarativo basado en texto que permite definir diagramas dentro de archivos Markdown y versionarlos junto con el codigo.
+
+Se eligio Mermaid porque simplifica el mantenimiento de la documentacion, facilita la revision de cambios en Git y evita depender de archivos binarios o herramientas graficas externas para actualizar los diagramas.
+
+### Visualizacion en JetBrains
+
+Para visualizar correctamente los diagramas Mermaid dentro de un IDE de JetBrains:
+
+1. Ir a `File > Settings > Plugins`.
+2. Buscar `Mermaid`.
+3. Instalar el plugin compatible con el IDE.
+4. Reiniciar el IDE si JetBrains lo solicita.
+5. Abrir cualquiera de los archivos Markdown dentro de `docs` y usar la vista previa para renderizar el diagrama.
+
+Este plugin permite interpretar los bloques `mermaid` embebidos en Markdown y mostrar los diagramas renderizados sin salir del editor.
+
 ## Configuracion del entorno local
 
 La aplicacion lee las credenciales de la base de datos desde un archivo `.env` ubicado en la raiz del proyecto.
