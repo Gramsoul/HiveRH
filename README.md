@@ -11,7 +11,7 @@ La documentacion detallada esta en la carpeta `docs`:
 - `docs/Requerimiento.md`: alcance funcional y reglas generales del sistema.
 - `docs/Informe_Entidades_Endpoints.md`: recorrido completo del sistema, entidades, endpoints y flujo recomendado para Postman/defensa.
 - `docs/Conceptual.md`: modelo conceptual del dominio.
-- `docs/DER.pdf`: exportacion PDF del diagrama, mantenida como material complementario.
+- `docs/DER.pdf`: diagrama entidad-relacion.
 
 Este README queda como guia rapida para levantar y entender el proyecto. Para el detalle completo de endpoints conviene ir al informe.
 
