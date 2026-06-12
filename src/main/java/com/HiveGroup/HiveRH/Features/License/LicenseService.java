@@ -7,6 +7,7 @@ import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeRepository;
 import com.HiveGroup.HiveRH.Features.License.DTO.LicenseDTO;
 import com.HiveGroup.HiveRH.Features.License.DTO.RequestLicenseDTO;
+import com.HiveGroup.HiveRH.Features.License.DTO.ResponseLicenseDTO;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,18 +105,30 @@ public class LicenseService {
     }
 
     @Transactional
-    public void createLicense(RequestLicenseDTO license){
+    public ResponseLicenseDTO createLicense(RequestLicenseDTO license){
         EmployeeEntity e = employeeRepository.findById(license.idEmployee()).orElseThrow(() -> new EntityNotFoundException("Empleado no entrada","Employee"));
         LicenseEntity licenseEntity = LicenseEntity.builder()
                 .employee(e)
                 .requestDate(license.requestDate())
+                .isAccepted(Boolean.TRUE.equals(license.isAccepted()))
                 .startDate(license.startDate())
                 .endDate(license.endDate())
-                .isPaid(license.isPaid())
+                .isPaid(Boolean.TRUE.equals(license.isPaid()))
                 .motive(license.motive())
                 .description(license.description())
                 .build();
-        licenseRepository.save(licenseEntity);
+        LicenseEntity saved = licenseRepository.save(licenseEntity);
+
+        return ResponseLicenseDTO.builder()
+                .id(saved.getId_license())
+                .isAccepted(saved.isAccepted())
+                .startDate(saved.getStartDate())
+                .endDate(saved.getEndDate())
+                .isPaid(saved.isPaid())
+                .motive(saved.getMotive())
+                .description(saved.getDescription())
+                .idEmployee(saved.getEmployee().getId_employee())
+                .build();
     }
 
     public LicenseDTO getLicense(Long id){

@@ -142,11 +142,9 @@ public class PayrollService {
         LocalDate startDate = payrollDate.withDayOfMonth(1);
         LocalDate endDate = payrollDate.withDayOfMonth(payrollDate.lengthOfMonth());
 
-        boolean exists = payrollRepository.existsByEmployeeAndPayrollDateBetween(
-                employee,
-                startDate,
-                endDate
-        );
+        boolean exists = !payrollRepository
+                .findByEmployeeAndPayrollDateBetween(employee, startDate, endDate)
+                .isEmpty();
 
         if (exists) {
             throw new IllegalArgumentException("El empleado ya tiene una liquidación registrada en ese mes");

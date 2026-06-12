@@ -30,7 +30,7 @@ public class LicenseController {
 
     @PostMapping("/api/license")
     public ResponseEntity<ResponseLicenseDTO> postLicense(@RequestBody @NotNull RequestLicenseDTO license) {
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(licenseService.createLicense(license));
     }
 
     @PatchMapping("/api/license")

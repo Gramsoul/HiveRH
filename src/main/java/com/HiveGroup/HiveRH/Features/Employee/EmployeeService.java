@@ -19,6 +19,7 @@ import com.HiveGroup.HiveRH.Features.Position.PositionEntity;
 import com.HiveGroup.HiveRH.Features.Position.PositionRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,7 @@ public class EmployeeService {
     private final PositionRepository positionRepository;
     private final DepartamentRepository departamentRepository;
 
+    @Transactional
     public EmployeeResponseDTO create(EmployeeCreateDTO employeeCreateDTO){
         if (employeeCreateDTO.id_branch() == null){
             throw new EntityNotFoundException("La sucursal es obligatoria","Branch");
@@ -79,6 +81,7 @@ public class EmployeeService {
         return toDTO(createdEmployee);
     }
 
+    @Transactional
     public EmployeeResponseDTO deleteById(Long id){
         EmployeeEntity employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado","Employee"));
@@ -90,6 +93,7 @@ public class EmployeeService {
         return toDTO(deletedEmployee);
     }
 
+    @Transactional
     public EmployeeResponseDTO putById(Long id, EmployeeUpdateDTO employeeUpdateDTO){
 
         EmployeeEntity employee = employeeRepository.findById(id)
@@ -125,6 +129,7 @@ public class EmployeeService {
     }
 
 
+    @Transactional
     public EmployeeResponseDTO patchById(Long id, EmployeeUpdateDTO employeeUpdateDTO){
 
         EmployeeEntity employee = employeeRepository.findById(id)
@@ -161,12 +166,14 @@ public class EmployeeService {
         return toDTO(updatedEmployee);
     }
 
+    @Transactional(readOnly = true)
     public EmployeeResponseDTO findById(Long id){
         EmployeeEntity employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado", "Employee"));
         return toDTO(employee);
     }
 
+    @Transactional(readOnly = true)
     public List<EmployeeResponseDTO> findAllbyFilter(EmployeeFilterDTO filters){
         List<EmployeeEntity> employeeList = employeeRepository.findAll();
 
