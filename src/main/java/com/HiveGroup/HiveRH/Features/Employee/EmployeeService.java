@@ -24,6 +24,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,7 @@ public class EmployeeService {
     private final DepartamentRepository departamentRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public EmployeeResponseDTO create(EmployeeCreateDTO employeeCreateDTO){
         if (employeeCreateDTO.id_branch() == null){
             throw new EntityNotFoundException("La sucursal es obligatoria","Branch");
@@ -88,6 +90,7 @@ public class EmployeeService {
         return toDTO(createdEmployee);
     }
 
+    @Transactional
     public EmployeeResponseDTO deleteById(Long id){
         EmployeeEntity employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado","Employee"));
@@ -99,6 +102,7 @@ public class EmployeeService {
         return toDTO(deletedEmployee);
     }
 
+    @Transactional
     public EmployeeResponseDTO putById(Long id, EmployeeUpdateDTO employeeUpdateDTO){
 
         EmployeeEntity employee = employeeRepository.findById(id)
@@ -134,6 +138,7 @@ public class EmployeeService {
     }
 
 
+    @Transactional
     public EmployeeResponseDTO patchById(Long id, EmployeeUpdateDTO employeeUpdateDTO){
 
         EmployeeEntity employee = employeeRepository.findById(id)
@@ -170,6 +175,7 @@ public class EmployeeService {
         return toDTO(updatedEmployee);
     }
 
+    @Transactional(readOnly = true)
     public EmployeeResponseDTO findById(Long id){
         EmployeeEntity employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado", "Employee"));
@@ -185,6 +191,7 @@ public class EmployeeService {
         return toDTO(account.getEmployee());
     }
 
+    @Transactional(readOnly = true)
     public List<EmployeeResponseDTO> findAllbyFilter(EmployeeFilterDTO filters){
         EmployeeFilterDTO activeFilters = filters != null
                 ? filters
@@ -239,7 +246,7 @@ public class EmployeeService {
     }
 
     private AccountEntity createDefaultAccount(EmployeeEntity employee) {
-        String username = "usuario_" + employee.getId_employee();
+        String username = "user_" + employee.getId_employee();
         AccountEntity account = AccountEntity.builder()
                 .user(username)
                 .email(username + "@hiverh.local")

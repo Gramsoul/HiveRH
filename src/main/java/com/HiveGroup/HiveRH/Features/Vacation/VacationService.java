@@ -1,6 +1,7 @@
 package com.HiveGroup.HiveRH.Features.Vacation;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
+import com.HiveGroup.HiveRH.Common.Security.Config.SecurityAuthorizationService;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Common.Utils.TextSearchUtils;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
@@ -22,6 +23,7 @@ public class VacationService {
     private final VacationRepository vacationRepository;
     private final EmployeeRepository employeeRepository;
     private final VacationMapper vacationMapper;
+    private final SecurityAuthorizationService securityAuthorizationService;
 
     // Crear vacaciones
     @Transactional
@@ -133,6 +135,10 @@ public class VacationService {
     public VacationResponse deleteById(Long idVacation) {
 
         VacationEntity vacation = findVacationById(idVacation);
+
+        if (!securityAuthorizationService.canDeleteVacation(idVacation)) {
+            throw new org.springframework.security.access.AccessDeniedException("No tenés permisos para eliminar estas vacaciones");
+        }
 
         VacationResponse response = vacationMapper.toResponse(vacation);
 

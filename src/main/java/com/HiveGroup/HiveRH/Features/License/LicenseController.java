@@ -33,7 +33,7 @@ public class LicenseController {
 
     @PostMapping("/api/license")
     @PreAuthorize("@securityAuthorizationService.canCreateLicenseForEmployee(#license.idEmployee())")
-    public ResponseEntity<LicenseDTO> postLicense(@P("license") @RequestBody @NotNull RequestLicenseDTO license) {
+    public ResponseEntity<ResponseLicenseDTO> postLicense(@P("license") @RequestBody @NotNull RequestLicenseDTO license) {
         return ResponseEntity.status(HttpStatus.CREATED).body(licenseService.createLicense(license));
     }
 
@@ -43,7 +43,7 @@ public class LicenseController {
     }
 
     @DeleteMapping("/api/license/{id_license}")
-    @PreAuthorize("@securityAuthorizationService.canAccessLicense(#id_license)")
+    @PreAuthorize("@securityAuthorizationService.canDeleteLicense(#id_license)")
     public ResponseEntity<Void> deleteLicense(@P("id_license") @PathVariable @NotNull Long id_license) {
         licenseService.deleteLicense(id_license);
         return ResponseEntity.noContent().build();

@@ -1,0 +1,366 @@
+### HiveRH API smoke test
+### Ejecutar en este orden. La API usa JWT en todos los endpoints salvo /api/auth/**.
+### Requisitos:
+### 1. Aplicacion levantada en localhost:8080
+### 2. Base MySQL configurada en .env
+### 3. El certificado de prueba vive dentro del repo en testdata/certificate-sample.pdf
+
+@baseUrl = http://localhost:8080
+@json = application/json
+@user = qa_admin
+@email = qa_admin@hiverh.local
+@password = ChangeMe123!
+
+### 1. Registrar usuario
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{json}}
+
+{
+  "user": "{{user}}",
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "rol": "ADMIN"
+}
+
+### 2. Login y captura de token
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{json}}
+
+{
+  "identifier": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {% client.global.set("token", response.body.token); %}
+
+### 3. Crear departamento
+# @name createDepartment
+POST {{baseUrl}}/api/department
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "name": "Recursos Humanos QA"
+}
+
+> {% client.global.set("departmentId", response.body.id_department); %}
+
+### 4. Listar departamentos
+GET {{baseUrl}}/api/department?id_department={{departmentId}}
+Authorization: Bearer {{token}}
+
+### 5. Crear sucursal
+# @name createBranch
+POST {{baseUrl}}/api/branch
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "name": "Casa Central QA",
+  "city": "Cordoba",
+  "address": "Av. Siempre Viva 123"
+}
+
+> {% client.global.set("branchId", response.body.id_branch); %}
+
+### 6. Listar sucursales
+GET {{baseUrl}}/api/branch
+Authorization: Bearer {{token}}
+
+### 7. Crear puesto
+# @name createPosition
+POST {{baseUrl}}/api/position
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "name": "Analista QA"
+}
+
+> {% client.global.set("positionId", response.body.id_position); %}
+
+### 8. Listar puestos
+GET {{baseUrl}}/api/position?name=Analista
+Authorization: Bearer {{token}}
+
+### 9. Crear empleado
+# @name createEmployee
+POST {{baseUrl}}/api/employees
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "name": "Ada",
+  "lastName": "Lovelace",
+  "phoneNumber": "3515550101",
+  "genre": "FEMALE",
+  "dni": "40111222",
+  "city": "Cordoba",
+  "address": "Bv. Testing 456",
+  "birth_date": "1995-04-12",
+  "hire_date": "2026-01-10",
+  "base_salary": 1500000,
+  "id_branch": {{branchId}},
+  "id_position": {{positionId}},
+  "id_department": {{departmentId}}
+}
+
+> {% client.global.set("employeeId", response.body.id_employee); %}
+
+### 10. Obtener empleado por id
+GET {{baseUrl}}/api/employees/{{employeeId}}
+Authorization: Bearer {{token}}
+
+### 11. Filtrar empleados
+GET {{baseUrl}}/api/employees?fullName=Ada&status=ACTIVE
+Authorization: Bearer {{token}}
+
+### 12. Actualizar empleado parcialmente
+PATCH {{baseUrl}}/api/employees/{{employeeId}}
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "city": "Villa Carlos Paz",
+  "address": "Ruta QA 789",
+  "status": "ACTIVE",
+  "base_salary": 1650000,
+  "id_branch": {{branchId}}
+}
+
+### 13. Actualizar sucursal
+PUT {{baseUrl}}/api/branch/{{branchId}}
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "name": "Casa Central QA",
+  "city": "Cordoba Capital",
+  "address": "Av. Siempre Viva 123"
+}
+
+### 14. Crear variacion
+# @name createVariation
+POST {{baseUrl}}/api/variations
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "title": "Bono productividad",
+  "description": "Bono mensual QA",
+  "total": 250000
+}
+
+> {% client.global.set("variationId", response.body.idVariation); %}
+
+### 15. Obtener variacion
+GET {{baseUrl}}/api/variations/{{variationId}}
+Authorization: Bearer {{token}}
+
+### 16. Filtrar variaciones
+GET {{baseUrl}}/api/variations?title=Bono&minTotal=100000&maxTotal=500000
+Authorization: Bearer {{token}}
+
+### 17. Actualizar variacion
+PATCH {{baseUrl}}/api/variations/{{variationId}}
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "title": "Bono productividad QA",
+  "description": "Bono mensual actualizado",
+  "total": 275000
+}
+
+### 18. Crear liquidacion
+# @name createPayroll
+POST {{baseUrl}}/api/payrolls
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "payrollDate": "2026-06-01",
+  "idEmployee": {{employeeId}},
+  "idVariations": [{{variationId}}]
+}
+
+> {% client.global.set("payrollId", response.body.idPayroll); %}
+
+### 19. Obtener liquidacion
+GET {{baseUrl}}/api/payrolls/{{payrollId}}
+Authorization: Bearer {{token}}
+
+### 20. Listar liquidaciones
+GET {{baseUrl}}/api/payrolls
+Authorization: Bearer {{token}}
+
+### 21. Crear vacaciones
+# @name createVacation
+POST {{baseUrl}}/api/vacation
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "requestDate": "2026-06-11",
+  "accepted": true,
+  "startDate": "2026-07-01",
+  "endDate": "2026-07-10",
+  "paid": true,
+  "idEmployee": {{employeeId}}
+}
+
+> {% client.global.set("vacationId", response.body.idVacation); %}
+
+### 22. Obtener vacaciones
+GET {{baseUrl}}/api/vacation/{{vacationId}}
+Authorization: Bearer {{token}}
+
+### 23. Actualizar vacaciones
+PUT {{baseUrl}}/api/vacation/{{vacationId}}
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "requestDate": "2026-06-11",
+  "accepted": true,
+  "startDate": "2026-07-05",
+  "endDate": "2026-07-15",
+  "paid": true,
+  "idEmployee": {{employeeId}}
+}
+
+### 24. Crear denuncia
+# @name createComplaint
+POST {{baseUrl}}/api/complaint
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "title": "Incidente QA",
+  "description": "Se registra un incidente para validar el flujo.",
+  "idEmployee": {{employeeId}}
+}
+
+> {% client.global.set("complaintId", response.body.idComplaint); %}
+
+### 25. Obtener denuncia
+GET {{baseUrl}}/api/complaint/{{complaintId}}
+Authorization: Bearer {{token}}
+
+### 26. Actualizar estado de denuncia
+PUT {{baseUrl}}/api/complaint/{{complaintId}}
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "status": "REVIEWED"
+}
+
+### 27. Crear licencia
+# @name createLicense
+POST {{baseUrl}}/api/license
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "requestDate": "2026-06-11",
+  "isAccepted": true,
+  "startDate": "2026-06-20",
+  "endDate": "2026-06-22",
+  "isPaid": true,
+  "motive": "Control medico",
+  "description": "Licencia creada desde HTTP Client",
+  "idCertificates": [],
+  "idEmployee": {{employeeId}}
+}
+
+> {% client.global.set("licenseId", response.body.id); %}
+
+### 28. Listar licencias
+GET {{baseUrl}}/api/license
+Authorization: Bearer {{token}}
+
+### 29. Obtener licencia por id
+GET {{baseUrl}}/api/license/{{licenseId}}
+Authorization: Bearer {{token}}
+
+### 30. Adjuntar certificado a licencia
+### IntelliJ HTTP Client no resuelve variables dentro de `< archivo`, por eso la ruta va literal.
+# @name createCertificate
+POST {{baseUrl}}/api/certificate
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="idLicense"
+
+{{licenseId}}
+--WebAppBoundary
+Content-Disposition: form-data; name="description"
+
+Certificado medico
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="certificate.pdf"
+Content-Type: application/pdf
+
+< ./testdata/certificate-sample.pdf
+--WebAppBoundary--
+
+> {% client.global.set("certificateId", response.body.idCertificate); %}
+
+### 31. Obtener metadatos de certificado
+GET {{baseUrl}}/api/certificate-info?id={{certificateId}}
+Authorization: Bearer {{token}}
+
+### 32. Descargar certificado
+GET {{baseUrl}}/api/certificate/{{certificateId}}
+Authorization: Bearer {{token}}
+
+### 33. Asociar certificados a licencia por patch
+PATCH {{baseUrl}}/api/license
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "id": {{licenseId}},
+  "idEmployee": {{employeeId}},
+  "idCertificates": [{{certificateId}}],
+  "description": "Licencia actualizada con certificado"
+}
+
+### 34. Listar suspensiones
+GET {{baseUrl}}/api/suspension?id_employee={{employeeId}}
+Authorization: Bearer {{token}}
+
+### 35. Limpieza opcional: borrar liquidacion
+DELETE {{baseUrl}}/api/payrolls/{{payrollId}}
+Authorization: Bearer {{token}}
+
+### 36. Limpieza opcional: borrar variacion
+DELETE {{baseUrl}}/api/variations/{{variationId}}
+Authorization: Bearer {{token}}
+
+### 37. Limpieza opcional: borrar vacaciones
+DELETE {{baseUrl}}/api/vacation/{{vacationId}}
+Authorization: Bearer {{token}}
+
+### 38. Limpieza opcional: borrar certificado
+DELETE {{baseUrl}}/api/certificate/{{certificateId}}
+Authorization: Bearer {{token}}
+
+### 39. Limpieza opcional: borrar empleado
+DELETE {{baseUrl}}/api/employees/{{employeeId}}
+Authorization: Bearer {{token}}
+
+### 40. Limpieza opcional: borrar puesto
+DELETE {{baseUrl}}/api/position/{{positionId}}
+Authorization: Bearer {{token}}
+
+### 41. Limpieza opcional: borrar sucursal
+DELETE {{baseUrl}}/api/branch/{{branchId}}
+Authorization: Bearer {{token}}
+
+### 42. Limpieza opcional: borrar departamento
+DELETE {{baseUrl}}/api/department/{{departmentId}}
+Authorization: Bearer {{token}}

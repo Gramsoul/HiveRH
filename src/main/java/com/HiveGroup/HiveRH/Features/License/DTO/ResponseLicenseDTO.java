@@ -7,10 +7,12 @@ import java.time.LocalDate;
 
 @Builder
 public record ResponseLicenseDTO(
+        Long id,
         Boolean isAccepted,
         LocalDate startDate,
         LocalDate endDate,
         Boolean isPaid,
         String motive,
-        String description) {
+        String description,
+        Long idEmployee) {
 }
