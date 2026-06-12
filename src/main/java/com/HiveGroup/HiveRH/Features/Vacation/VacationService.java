@@ -1,9 +1,12 @@
 package com.HiveGroup.HiveRH.Features.Vacation;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
+import com.HiveGroup.HiveRH.Common.Security.Config.SecurityAuthorizationService;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
+import com.HiveGroup.HiveRH.Common.Utils.TextSearchUtils;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeRepository;
+import com.HiveGroup.HiveRH.Features.Vacation.DTO.VacationFilterDTO;
 import com.HiveGroup.HiveRH.Features.Vacation.DTO.VacationRequest;
 import com.HiveGroup.HiveRH.Features.Vacation.DTO.VacationResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,7 @@ public class VacationService {
     private final VacationRepository vacationRepository;
     private final EmployeeRepository employeeRepository;
     private final VacationMapper vacationMapper;
+    private final SecurityAuthorizationService securityAuthorizationService;
 
     // Crear vacaciones
     @Transactional
@@ -64,13 +68,24 @@ public class VacationService {
         return vacationMapper.toResponse(vacation);
     }
 
-    // Listar todas las vacaciones
+    // Listar vacaciones con filtros
     @Transactional(readOnly = true)
-    public List<VacationResponse> findAll() {
+    public List<VacationResponse> findAllByFilter(VacationFilterDTO filters) {
 
-        List<VacationEntity> vacations = vacationRepository.findAll();
+        VacationFilterDTO activeFilters = filters != null
+                ? filters
+                : new VacationFilterDTO(null, null, null, null, null);
 
-        return vacationMapper.toResponseList(vacations);
+        validateFilterDateRange(activeFilters);
+
+        return vacationRepository.findAll()
+                .stream()
+                .filter(vacation -> filterById(vacation, activeFilters.idVacation()))
+                .filter(vacation -> filterByAccepted(vacation, activeFilters.accepted()))
+                .filter(vacation -> filterByDateRange(vacation, activeFilters))
+                .filter(vacation -> filterByEmployeeFullName(vacation, activeFilters.fullName()))
+                .map(vacationMapper::toResponse)
+                .toList();
     }
 
     // Actualizar vacaciones
@@ -120,6 +135,10 @@ public class VacationService {
     public VacationResponse deleteById(Long idVacation) {
 
         VacationEntity vacation = findVacationById(idVacation);
+
+        if (!securityAuthorizationService.canDeleteVacation(idVacation)) {
+            throw new org.springframework.security.access.AccessDeniedException("No tenés permisos para eliminar estas vacaciones");
+        }
 
         VacationResponse response = vacationMapper.toResponse(vacation);
 
@@ -222,5 +241,45 @@ public class VacationService {
 
         return !existingStartDate.isAfter(newEndDate)
                 && !existingEndDate.isBefore(newStartDate);
+    }
+
+    private void validateFilterDateRange(VacationFilterDTO filters) {
+
+        if (filters.startDate() != null
+                && filters.endDate() != null
+                && filters.endDate().isBefore(filters.startDate())) {
+            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio");
+        }
+    }
+
+    private boolean filterById(VacationEntity vacation, Long idVacation) {
+
+        return idVacation == null || vacation.getId_vacation().equals(idVacation);
+    }
+
+    private boolean filterByAccepted(VacationEntity vacation, Boolean accepted) {
+
+        return accepted == null || vacation.isAccepted() == accepted;
+    }
+
+    private boolean filterByDateRange(VacationEntity vacation, VacationFilterDTO filters) {
+
+        if (filters.startDate() == null && filters.endDate() == null) {
+            return true;
+        }
+
+        boolean startsBeforeFilterEnd = filters.endDate() == null || !vacation.getStartDate().isAfter(filters.endDate());
+        boolean endsAfterFilterStart = filters.startDate() == null || !vacation.getEndDate().isBefore(filters.startDate());
+
+        return startsBeforeFilterEnd && endsAfterFilterStart;
+    }
+
+    private boolean filterByEmployeeFullName(VacationEntity vacation, String fullName) {
+
+        return TextSearchUtils.matchesFullName(
+                vacation.getEmployee().getName(),
+                vacation.getEmployee().getLastName(),
+                fullName
+        );
     }
 }

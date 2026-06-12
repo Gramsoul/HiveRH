@@ -1,6 +1,7 @@
 package com.HiveGroup.HiveRH.Features.Employee;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
+import com.HiveGroup.HiveRH.Common.Utils.Enums.RolEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Common.Utils.TextSearchUtils;
 import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
@@ -18,6 +19,10 @@ import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity
 import com.HiveGroup.HiveRH.Features.Position.PositionEntity;
 import com.HiveGroup.HiveRH.Features.Position.PositionRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +37,7 @@ public class EmployeeService {
     private final AccountRepository accountRepository;
     private final PositionRepository positionRepository;
     private final DepartamentRepository departamentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public EmployeeResponseDTO create(EmployeeCreateDTO employeeCreateDTO){
@@ -77,6 +83,9 @@ public class EmployeeService {
         employee.setAssignments(assignments);
 
         EmployeeEntity createdEmployee = employeeRepository.save(employee);
+        AccountEntity defaultAccount = createDefaultAccount(createdEmployee);
+        createdEmployee.setAccount(defaultAccount);
+        createdEmployee = employeeRepository.save(createdEmployee);
 
         return toDTO(createdEmployee);
     }
@@ -174,22 +183,35 @@ public class EmployeeService {
     }
 
     @Transactional(readOnly = true)
+    public EmployeeResponseDTO findCurrentEmployee() {
+        AccountEntity account = getCurrentAccount();
+        if (account.getEmployee() == null) {
+            throw new EntityNotFoundException("Empleado no encontrado para la cuenta autenticada", "Employee");
+        }
+
+        return toDTO(account.getEmployee());
+    }
+
+    @Transactional(readOnly = true)
     public List<EmployeeResponseDTO> findAllbyFilter(EmployeeFilterDTO filters){
+        EmployeeFilterDTO activeFilters = filters != null
+                ? filters
+                : new EmployeeFilterDTO(null, null, null, null, null, null, null, null, null, null);
         List<EmployeeEntity> employeeList = employeeRepository.findAll();
 
 
         return employeeList.stream()
                 .map(this::toDTO)
-                .filter(employee -> TextSearchUtils.matchesFullName(employee.name(), employee.lastName(), filters.fullName()))
-                .filter(employee -> filters.dni() == null || employee.dni().equals(filters.dni()))
-                .filter(employee -> filters.id_branch() == null || employee.branch_id().equals(filters.id_branch()))
-                .filter(employee -> filters.hire_date() == null || employee.hireDate().equals(filters.hire_date()))
-                .filter(employee -> filters.termination_date() == null || employee.terminationDate().equals(filters.termination_date()))
-                .filter(employee -> filters.status() == null || employee.status() == filters.status())
-                .filter(employee -> filters.position() == null || employee.assignments().stream().anyMatch(a -> a.positionName().equalsIgnoreCase(filters.position())))
-                .filter(employee -> filters.department() == null || employee.assignments().stream().anyMatch(a -> a.departmentName().equalsIgnoreCase(filters.department())))
-                .filter(employee -> filters.min_salary() == null || employee.baseSalary() >= filters.min_salary())
-                .filter(employee -> filters.max_salary() == null || employee.baseSalary() <= filters.max_salary())
+                .filter(employee -> TextSearchUtils.matchesFullName(employee.name(), employee.lastName(), activeFilters.fullName()))
+                .filter(employee -> activeFilters.dni() == null || employee.dni().equals(activeFilters.dni()))
+                .filter(employee -> activeFilters.id_branch() == null || employee.branch_id().equals(activeFilters.id_branch()))
+                .filter(employee -> activeFilters.hire_date() == null || employee.hireDate().equals(activeFilters.hire_date()))
+                .filter(employee -> activeFilters.termination_date() == null || employee.terminationDate().equals(activeFilters.termination_date()))
+                .filter(employee -> activeFilters.status() == null || employee.status() == activeFilters.status())
+                .filter(employee -> activeFilters.position() == null || employee.assignments().stream().anyMatch(a -> a.positionName().equalsIgnoreCase(activeFilters.position())))
+                .filter(employee -> activeFilters.department() == null || employee.assignments().stream().anyMatch(a -> a.departmentName().equalsIgnoreCase(activeFilters.department())))
+                .filter(employee -> activeFilters.min_salary() == null || employee.baseSalary() >= activeFilters.min_salary())
+                .filter(employee -> activeFilters.max_salary() == null || employee.baseSalary() <= activeFilters.max_salary())
                 .toList();
     }
 
@@ -222,6 +244,35 @@ public class EmployeeService {
                 employee.getAccount() != null ? employee.getAccount().getId_account() : null,
                 assignments
         );
+    }
+
+    private AccountEntity createDefaultAccount(EmployeeEntity employee) {
+        String username = "user_" + employee.getId_employee();
+        AccountEntity account = AccountEntity.builder()
+                .user(username)
+                .email(username + "@hiverh.local")
+                .password(passwordEncoder.encode("123"))
+                .rol(RolEnum.EMPLOYEE)
+                .statusEnum(StatusEnum.ACTIVE)
+                .build();
+
+        return accountRepository.save(account);
+    }
+
+    private AccountEntity getCurrentAccount() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new AccessDeniedException("No hay usuario autenticado");
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof AccountEntity account) {
+            return account;
+        }
+
+        String username = authentication.getName();
+        return accountRepository.findByUserOrEmail(username, username)
+                .orElseThrow(() -> new EntityNotFoundException("Cuenta inexistente", "AccountEntity"));
     }
 
 }

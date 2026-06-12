@@ -1,4 +1,4 @@
-package com.HiveGroup.HiveRH.Features.Account;
+package com.HiveGroup.HiveRH.Features.Account.DTO;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.RolEnum;
 
