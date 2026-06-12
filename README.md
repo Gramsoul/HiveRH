@@ -17,7 +17,7 @@ Este README queda como guia rapida para levantar y entender el proyecto. Para el
 
 ## Requisitos
 
-- JDK compatible con el proyecto.
+- JDK 21, de acuerdo con la configuracion actual de compilacion del `pom.xml`.
 - MySQL corriendo localmente o en un servidor accesible.
 - Maven Wrapper incluido en el repositorio (`mvnw.cmd` / `mvnw`), o Maven instalado.
 - Variables de entorno configuradas en el entorno de ejecucion elegido.
