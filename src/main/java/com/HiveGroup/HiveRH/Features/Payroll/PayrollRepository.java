@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface PayrollRepository extends JpaRepository<PayrollEntity, Long> {
 
+    List<PayrollEntity> findByEmployee(EmployeeEntity employee);
+
     List<PayrollEntity> findByEmployeeAndPayrollDateBetween(
             EmployeeEntity employee,
             LocalDate startDate,
