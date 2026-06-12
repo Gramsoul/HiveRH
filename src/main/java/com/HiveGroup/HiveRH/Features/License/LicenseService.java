@@ -1,6 +1,7 @@
 package com.HiveGroup.HiveRH.Features.License;
 
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
+import com.HiveGroup.HiveRH.Common.Security.Config.SecurityAuthorizationService;
 import com.HiveGroup.HiveRH.Features.Certificate.CertificateService;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeRepository;
@@ -21,6 +22,7 @@ public class LicenseService {
     public LicenseRepository licenseRepository;
     public EmployeeRepository employeeRepository;
     public CertificateService certificateService;
+    public SecurityAuthorizationService securityAuthorizationService;
     @Autowired
     public LicenseMapper licenseMapper;
 
@@ -126,6 +128,11 @@ public class LicenseService {
     public void deleteLicense(Long id) {
         LicenseEntity license = licenseRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Licencia no entrada", "License"));
+
+        if (!securityAuthorizationService.canDeleteLicense(id)) {
+            throw new org.springframework.security.access.AccessDeniedException("No tenés permisos para eliminar esta licencia");
+        }
+
         licenseRepository.delete(license);
     }
 

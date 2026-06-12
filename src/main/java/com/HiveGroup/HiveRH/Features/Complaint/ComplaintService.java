@@ -84,6 +84,19 @@ public class ComplaintService {
     }
 
 
+    @Transactional
+    public ComplaintResponse markAsReviewed(Long idComplaint) {
+
+        ComplaintEntity complaint = findComplaintById(idComplaint);
+
+        complaint.setStatus(ComplaintStatusEnum.REVIEWED);
+
+        ComplaintEntity updatedComplaint = complaintRepository.save(complaint);
+
+        return complaintMapper.toResponse(updatedComplaint);
+    }
+
+
     private ComplaintEntity findComplaintById(Long idComplaint) {
 
         return complaintRepository.findById(idComplaint)

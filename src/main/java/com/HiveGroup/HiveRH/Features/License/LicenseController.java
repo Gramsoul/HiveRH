@@ -43,7 +43,7 @@ public class LicenseController {
     }
 
     @DeleteMapping("/api/license/{id_license}")
-    @PreAuthorize("@securityAuthorizationService.canAccessLicense(#id_license)")
+    @PreAuthorize("@securityAuthorizationService.canDeleteLicense(#id_license)")
     public ResponseEntity<Void> deleteLicense(@P("id_license") @PathVariable @NotNull Long id_license) {
         licenseService.deleteLicense(id_license);
         return ResponseEntity.noContent().build();
