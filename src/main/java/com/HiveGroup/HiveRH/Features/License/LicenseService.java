@@ -8,6 +8,7 @@ import com.HiveGroup.HiveRH.Features.Employee.EmployeeRepository;
 import com.HiveGroup.HiveRH.Features.License.DTO.LicenseFilterDTO;
 import com.HiveGroup.HiveRH.Features.License.DTO.LicenseDTO;
 import com.HiveGroup.HiveRH.Features.License.DTO.RequestLicenseDTO;
+import com.HiveGroup.HiveRH.Features.License.DTO.ResponseLicenseDTO;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,7 +113,8 @@ public class LicenseService {
         EmployeeEntity e = employeeRepository.findById(license.idEmployee()).orElseThrow(() -> new EntityNotFoundException("Empleado no entrada","Employee"));
         LicenseEntity licenseEntity = LicenseEntity.builder()
                 .employee(e)
-                .requestDate(license.requestDate() != null ? license.requestDate() : LocalDate.now())
+                .requestDate(license.requestDate())
+                .isAccepted(Boolean.TRUE.equals(license.isAccepted()))
                 .startDate(license.startDate())
                 .endDate(license.endDate())
                 .isPaid(Boolean.TRUE.equals(license.isPaid()))

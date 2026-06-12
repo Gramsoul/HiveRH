@@ -33,7 +33,7 @@ public class LicenseController {
 
     @PostMapping("/api/license")
     @PreAuthorize("@securityAuthorizationService.canCreateLicenseForEmployee(#license.idEmployee())")
-    public ResponseEntity<LicenseDTO> postLicense(@P("license") @RequestBody @NotNull RequestLicenseDTO license) {
+    public ResponseEntity<ResponseLicenseDTO> postLicense(@P("license") @RequestBody @NotNull RequestLicenseDTO license) {
         return ResponseEntity.status(HttpStatus.CREATED).body(licenseService.createLicense(license));
     }
 
