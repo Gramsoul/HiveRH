@@ -55,6 +55,9 @@ public class CertificateService {
     }
 
     public List<Long> getCertificateID(List<CertificateEntity> certificateEntityList) {
+        if (certificateEntityList == null) {
+            return List.of();
+        }
 
         List<Long> idCert = new ArrayList<>();
 
@@ -77,6 +80,9 @@ public class CertificateService {
                     .license(license)
                     .file(pdf).build();
 
+            if (license.getCertificates() == null) {
+                license.setCertificates(new ArrayList<>());
+            }
             license.getCertificates().add(certificate);
             certificateRepository.save(certificate);
 

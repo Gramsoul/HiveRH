@@ -1,11 +1,14 @@
 package com.HiveGroup.HiveRH.Features.Vacation;
 
+import com.HiveGroup.HiveRH.Features.Vacation.DTO.VacationFilterDTO;
 import com.HiveGroup.HiveRH.Features.Vacation.DTO.VacationRequest;
 import com.HiveGroup.HiveRH.Features.Vacation.DTO.VacationResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,34 +20,23 @@ public class VacationController {
 
     private final VacationService vacationService;
 
-    // GET - api/vacation
     @GetMapping
-    public ResponseEntity<List<VacationResponse>> findAll() {
+    public ResponseEntity<List<VacationResponse>> findAll(VacationFilterDTO filters) {
 
-        List<VacationResponse> response = vacationService.findAll();
-
-        return ResponseEntity.ok(response);
-    }
-
-    // GET - api/vacation/{id_vacation}
-    @GetMapping("/{id_vacation}")
-    public ResponseEntity<VacationResponse> findById(@PathVariable("id_vacation") Long idVacation) {
-
-        VacationResponse response = vacationService.findById(idVacation);
+        List<VacationResponse> response = vacationService.findAllByFilter(filters);
 
         return ResponseEntity.ok(response);
     }
 
-    // POST - api/vacation
     @PostMapping
-    public ResponseEntity<VacationResponse> create(@Valid @RequestBody VacationRequest request) {
+    @PreAuthorize("@securityAuthorizationService.canCreateVacationForEmployee(#request.idEmployee())")
+    public ResponseEntity<VacationResponse> create(@P("request") @Valid @RequestBody VacationRequest request) {
 
         VacationResponse response = vacationService.create(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // PUT - api/vacation/{id_vacation}
     @PutMapping("/{id_vacation}")
     public ResponseEntity<VacationResponse> updateById(
             @PathVariable("id_vacation") Long idVacation,
@@ -56,9 +48,11 @@ public class VacationController {
         return ResponseEntity.ok(response);
     }
 
-    // DELETE - api/vacation/{id_vacation}
     @DeleteMapping("/{id_vacation}")
-    public ResponseEntity<VacationResponse> deleteById(@PathVariable("id_vacation") Long idVacation) {
+    @PreAuthorize("@securityAuthorizationService.canDeleteVacation(#idVacation)")
+    public ResponseEntity<VacationResponse> deleteById(
+            @P("idVacation") @PathVariable("id_vacation") Long idVacation
+    ) {
 
         VacationResponse response = vacationService.deleteById(idVacation);
 

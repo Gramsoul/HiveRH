@@ -1,10 +1,13 @@
 package com.HiveGroup.HiveRH.Features.Account;
 
-import com.HiveGroup.HiveRH.Common.Security.Config.SecurityConfiguration;
+import com.HiveGroup.HiveRH.Common.Utils.Enums.RolEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
+import com.HiveGroup.HiveRH.Features.Account.DTO.AccountDTO;
+import com.HiveGroup.HiveRH.Features.Account.DTO.NewAccountDTO;
 import lombok.AllArgsConstructor;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,16 +19,9 @@ public class AccountService {
     private PasswordEncoder passwordEncoder;
 
 
-    public UserDetails loadUserByUsername(Long id){
-        AccountEntity account = accountRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cuenta inexistente", "AccountEntity"));
-
-        return User.builder()
-                .username(account.getUser())
-                .password(account.getPassword())
-                .build();
-    }
-
     public AccountDTO save(NewAccountDTO newAccountDTO){
+        validateCanCreateRole(newAccountDTO.rol());
+
         AccountEntity entity = accountMapper.toEntity(newAccountDTO);
         entity.setPassword(
                 passwordEncoder.encode(entity.getPassword())
@@ -35,5 +31,84 @@ public class AccountService {
         return accountMapper.toDTO(entity);
     }
 
+    public AccountDTO updateRole(Long id, RolEnum rol) {
+        if (rol == null) {
+            throw new IllegalArgumentException("El rol es obligatorio");
+        }
 
+        AccountEntity account = accountRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Cuenta inexistente", "AccountEntity"));
+        account.setRol(rol);
+        accountRepository.save(account);
+
+        return accountMapper.toDTO(account);
+    }
+
+    public AccountDTO updateCurrentEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("El email es obligatorio");
+        }
+
+        AccountEntity account = getCurrentAccount();
+        account.setEmail(email);
+        accountRepository.save(account);
+
+        return accountMapper.toDTO(account);
+    }
+
+    public AccountDTO updateCurrentPassword(String currentPassword, String newPassword) {
+        if (currentPassword == null || currentPassword.isBlank()) {
+            throw new IllegalArgumentException("La contraseña actual es obligatoria");
+        }
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new IllegalArgumentException("La nueva contraseña es obligatoria");
+        }
+
+        AccountEntity account = getCurrentAccount();
+        if (!passwordEncoder.matches(currentPassword, account.getPassword())) {
+            throw new AccessDeniedException("La contraseña actual no es correcta");
+        }
+
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+
+        return accountMapper.toDTO(account);
+    }
+
+    private void validateCanCreateRole(RolEnum rol) {
+        if (rol == null) {
+            throw new IllegalArgumentException("El rol es obligatorio");
+        }
+        if (hasRole("ROLE_ADMIN")) {
+            return;
+        }
+        if (hasRole("ROLE_RRHH") && rol == RolEnum.RRHH) {
+            return;
+        }
+
+        throw new AccessDeniedException("No tenés permisos para crear una cuenta con ese rol");
+    }
+
+    private AccountEntity getCurrentAccount() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new AccessDeniedException("No hay usuario autenticado");
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof AccountEntity account) {
+            return account;
+        }
+
+        String username = authentication.getName();
+        return accountRepository.findByUserOrEmail(username, username)
+                .orElseThrow(() -> new EntityNotFoundException("Cuenta inexistente", "AccountEntity"));
+    }
+
+    private boolean hasRole(String role) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null
+                && authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals(role));
+    }
 }
