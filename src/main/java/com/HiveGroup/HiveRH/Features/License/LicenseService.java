@@ -113,6 +113,7 @@ public class LicenseService {
         LicenseEntity licenseEntity = LicenseEntity.builder()
                 .employee(e)
                 .requestDate(license.requestDate() != null ? license.requestDate() : LocalDate.now())
+                .isAccepted(Boolean.TRUE.equals(license.isAccepted()))
                 .startDate(license.startDate())
                 .endDate(license.endDate())
                 .isPaid(Boolean.TRUE.equals(license.isPaid()))
