@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,7 +29,8 @@ public class VacationController {
     }
 
     @PostMapping
-    public ResponseEntity<VacationResponse> create(@Valid @RequestBody VacationRequest request) {
+    @PreAuthorize("@securityAuthorizationService.canCreateVacationForEmployee(#request.idEmployee())")
+    public ResponseEntity<VacationResponse> create(@P("request") @Valid @RequestBody VacationRequest request) {
 
         VacationResponse response = vacationService.create(request);
 
@@ -46,7 +49,10 @@ public class VacationController {
     }
 
     @DeleteMapping("/{id_vacation}")
-    public ResponseEntity<VacationResponse> deleteById(@PathVariable("id_vacation") Long idVacation) {
+    @PreAuthorize("@securityAuthorizationService.canDeleteVacation(#idVacation)")
+    public ResponseEntity<VacationResponse> deleteById(
+            @P("idVacation") @PathVariable("id_vacation") Long idVacation
+    ) {
 
         VacationResponse response = vacationService.deleteById(idVacation);
 

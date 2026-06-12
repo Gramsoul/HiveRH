@@ -239,7 +239,7 @@ public class EmployeeService {
     }
 
     private AccountEntity createDefaultAccount(EmployeeEntity employee) {
-        String username = "usuario_" + employee.getId_employee();
+        String username = "user_" + employee.getId_employee();
         AccountEntity account = AccountEntity.builder()
                 .user(username)
                 .email(username + "@hiverh.local")
