@@ -10,16 +10,14 @@ import com.HiveGroup.HiveRH.Features.License.LicenseService;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-
-import java.io.IOException;
-import java.time.LocalDate;
 
 @Controller
 @AllArgsConstructor
@@ -28,8 +26,9 @@ public class CertificateController {
 
 
     @PostMapping("/api/certificate")
+    @PreAuthorize("@securityAuthorizationService.canAccessLicense(#idLicense)")
     public ResponseEntity<CertificateDTO> createCertificate(
-            @RequestParam("idLicense") @NotNull Long idLicense,
+            @P("idLicense") @RequestParam("idLicense") @NotNull Long idLicense,
             @RequestParam("description") String description,
             @RequestParam("file") @NotNull MultipartFile file) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -37,7 +36,8 @@ public class CertificateController {
     }
 
     @GetMapping("/api/certificate/{id_certificate}")
-    public ResponseEntity<byte[]> loadPDF(@PathVariable @NotNull long id_certificate) {
+    @PreAuthorize("@securityAuthorizationService.canAccessCertificate(#id_certificate)")
+    public ResponseEntity<byte[]> loadPDF(@P("id_certificate") @PathVariable @NotNull Long id_certificate) {
         return ResponseEntity.ok()
                 .header("Content-Disposition",
                         "inline; filename=certificate.pdf")
@@ -46,12 +46,14 @@ public class CertificateController {
     }
 
     @GetMapping("/api/certificate-info")
-    public ResponseEntity<ResponseCertificateDTO> getInfo(@RequestParam @NotNull Long id) {
+    @PreAuthorize("@securityAuthorizationService.canAccessCertificate(#id)")
+    public ResponseEntity<ResponseCertificateDTO> getInfo(@P("id") @RequestParam @NotNull Long id) {
         return ResponseEntity.ok().body(certificateService.getInfoCertificate(id));
     }
 
     @DeleteMapping("/api/certificate/{id_certificate}")
-    public ResponseEntity<Void> deleteCertificate(@PathVariable @NotNull Long id_certificate) {
+    @PreAuthorize("@securityAuthorizationService.canAccessCertificate(#id_certificate)")
+    public ResponseEntity<Void> deleteCertificate(@P("id_certificate") @PathVariable @NotNull Long id_certificate) {
         certificateService.deleteCertificate(id_certificate);
         return ResponseEntity.noContent().build();
     }

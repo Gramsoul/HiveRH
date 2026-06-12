@@ -1,87 +1,169 @@
 # HiveRH
-This is a software solution designed for employee management, developed by the Human Resources department.
+
+HiveRH es una API REST para la gestion de Recursos Humanos. Permite administrar empleados, cuentas de usuario, roles, estructura organizacional, liquidaciones de sueldo, licencias, vacaciones, suspensiones, denuncias y certificados.
+
+El proyecto esta planteado como un MVP academico: el foco esta en tener reglas de negocio claras, autenticacion con JWT, permisos por rol y endpoints faciles de probar desde Postman o Swagger.
 
 ## Documentacion
 
-La documentacion funcional y de diagramas del proyecto se encuentra en la carpeta `docs`.
+La documentacion detallada esta en la carpeta `docs`:
 
-- `docs/Requerimiento.md`: relevamiento funcional y alcance del sistema.
-- `docs/Conceptual.md`: diagrama conceptual del dominio.
-- `docs/ERD.md`: diagrama entidad-relacion de la base de datos.
+- `docs/Requerimiento.md`: alcance funcional y reglas generales del sistema.
+- `docs/Informe_Entidades_Endpoints.md`: recorrido completo del sistema, entidades, endpoints y flujo recomendado para Postman/defensa.
+- `docs/Conceptual.md`: modelo conceptual del dominio.
+- `docs/DER.pdf`: diagrama entidad-relacion.
 
-Los diagramas estan documentados con Mermaid. Mermaid es un lenguaje declarativo basado en texto que permite definir diagramas dentro de archivos Markdown y versionarlos junto con el codigo.
+Este README queda como guia rapida para levantar y entender el proyecto. Para el detalle completo de endpoints conviene ir al informe.
 
-Se eligio Mermaid porque simplifica el mantenimiento de la documentacion, facilita la revision de cambios en Git y evita depender de archivos binarios o herramientas graficas externas para actualizar los diagramas.
+## Requisitos
 
-### Visualizacion en JetBrains
+- JDK compatible con el proyecto.
+- MySQL corriendo localmente o en un servidor accesible.
+- Maven Wrapper incluido en el repositorio (`mvnw.cmd` / `mvnw`), o Maven instalado.
+- Variables de entorno configuradas en el entorno de ejecucion elegido.
 
-Para visualizar correctamente los diagramas Mermaid dentro de un IDE de JetBrains:
+## Configuracion
 
-1. Ir a `File > Settings > Plugins`.
-2. Buscar `Mermaid`.
-3. Instalar el plugin compatible con el IDE.
-4. Reiniciar el IDE si JetBrains lo solicita.
-5. Abrir cualquiera de los archivos Markdown dentro de `docs` y usar la vista previa para renderizar el diagrama.
+La aplicacion toma su configuracion desde `src/main/resources/application.yaml`. Las variables necesarias son:
 
-Este plugin permite interpretar los bloques `mermaid` embebidos en Markdown y mostrar los diagramas renderizados sin salir del editor.
+| Variable | Descripcion | Ejemplo |
+|---|---|---|
+| `DB_URL` | URL JDBC de la base MySQL | `jdbc:mysql://localhost:3306/hiverh` |
+| `DB_USER` | Usuario de MySQL | `root` |
+| `DB_PASSWORD` | Password de MySQL | `admin` |
+| `SECRET` | Clave para firmar JWT | `clave-super-secreta-de-32-bytes-minimo` |
+| `EXPIRATION` | Duracion del token en milisegundos | `86400000` |
 
-## Configuracion del entorno local
-
-La aplicacion lee las credenciales de la base de datos desde un archivo `.env` ubicado en la raiz del proyecto.
-
-1. Copiar el archivo de ejemplo:
-
-```sh
-cp .env.sample .env
-```
-
-2. Actualizar `.env` con la configuracion local de la base de datos:
+Ejemplo:
 
 ```properties
 DB_URL=jdbc:mysql://localhost:3306/hiverh
 DB_USER=root
-DB_PASSWORD=your_password
+DB_PASSWORD=admin
+SECRET=clave-super-secreta-de-32-bytes-minimo
+EXPIRATION=86400000
 ```
 
-`DB_URL`, `DB_USER` y `DB_PASSWORD` son utilizadas por `src/main/resources/application.yaml` para configurar el datasource de Spring.
+No es obligatorio usar un archivo `.env`. Cada integrante puede configurar estas variables como prefiera: desde IntelliJ IDEA, desde la terminal, desde variables del sistema operativo o desde el entorno que use para ejecutar la aplicacion.
 
-El archivo `.env` es ignorado por Git porque puede contener credenciales locales. Mantener `.env.sample` actualizado cada vez que se agregue una nueva variable de entorno requerida.
+En IntelliJ IDEA:
 
-## Configuracion de la base de datos local
-
-El proyecto esta configurado para conectarse a MySQL. Si se utiliza una base de datos en la maquina host, MySQL debe estar instalado y corriendo localmente.
-
-1. Ingresar a MySQL:
-
-```sh
-mysql -u root -p
+```text
+Run/Debug Configurations > Environment variables
 ```
 
-2. Crear la base de datos:
+## Base de datos
+
+HiveRH usa MySQL. Antes de levantar la aplicacion, la base debe existir:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS hiverh;
 ```
 
-3. Verificar que el archivo `.env` apunte a esa base:
+Hibernate esta configurado con `ddl-auto: update`, por lo que puede crear o actualizar tablas dentro de esa base, pero no crea la base de datos MySQL desde cero.
 
-```properties
-DB_URL=jdbc:mysql://localhost:3306/hiverh
-DB_USER=root
-DB_PASSWORD=your_password
+## Ejecucion local
+
+La API queda disponible por defecto en:
+
+```text
+http://localhost:8080
 ```
 
-La base de datos `hiverh` debe existir antes de iniciar la aplicacion. Hibernate no crea la base de datos MySQL automaticamente.
+## Autenticacion
 
-Con la configuracion actual:
+La API usa JWT. Para consumir endpoints protegidos:
 
-```yaml
-spring:
-  jpa:
-    hibernate:
-      ddl-auto: update
+1. Ejecutar `POST /api/auth/login`.
+2. Copiar el token recibido.
+3. Enviar el token en cada request protegido:
+
+```http
+Authorization: Bearer <token>
 ```
 
-Hibernate crea o actualiza las tablas dentro de la base `hiverh` a partir de las entidades Java del proyecto.
+Roles principales:
 
-Autors: Gallego Romero Gonzalo N., Herrera Victor M., Molina Cristian N., Romero Rajoy Jose L. 
+- `ADMIN`: administra todo el sistema.
+- `RRHH`: gestiona empleados, licencias, vacaciones, suspensiones, denuncias y liquidaciones.
+- `EMPLOYEE`: consulta y opera sobre recursos propios cuando la regla de negocio lo permite.
+
+## Swagger
+
+Con la aplicacion levantada:
+
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+
+Swagger esta liberado para facilitar pruebas y revision de contratos.
+
+## Endpoints base
+
+El detalle completo de endpoints esta en `docs/Informe_Entidades_Endpoints.md`. Como referencia rapida, los modulos principales son:
+
+| Modulo | Base path |
+|---|---|
+| Auth | `/api/auth` |
+| Accounts | `/api/accounts` |
+| Employees | `/api/employees` |
+| Branches | `/api/branch` |
+| Departments | `/api/department` |
+| Positions | `/api/position` |
+| Variations | `/api/variations` |
+| Payrolls | `/api/payrolls` |
+| Licenses | `/api/license` |
+| Certificates | `/api/certificate` |
+| Vacations | `/api/vacation` |
+| Complaints | `/api/complaint` |
+| Suspensions | `/api/suspension` |
+
+Los filtros en endpoints `GET` se envian por query params. No hace falta mandar todos los filtros: se puede enviar uno, varios o ninguno.
+
+Ejemplos:
+
+```http
+GET /api/employees?dni=43917621
+GET /api/vacation?accepted=false&fullName=Juan Perez
+GET /api/payrolls/employee/3?startDate=2026-01-01&endDate=2026-06-30
+```
+
+## Reglas importantes
+
+- Un empleado no puede consultar liquidaciones de otro empleado.
+- RRHH y ADMIN pueden consultar liquidaciones de cualquier empleado.
+- Solo RRHH y ADMIN pueden cargar, modificar o borrar liquidaciones.
+- No se permite cargar dos liquidaciones para el mismo empleado en el mismo mes.
+- El empleado puede eliminar sus propias solicitudes de licencia o vacaciones solo si no fueron aceptadas.
+- RRHH no elimina solicitudes de licencia/vacaciones: las gestiona, aprueba o rechaza.
+- ADMIN puede administrar todos los recursos.
+- Las denuncias solo pueden ser listadas o revisadas por RRHH o ADMIN.
+
+## Errores comunes
+
+- `401 Unauthorized`: falta token o el token no es valido.
+- `403 Forbidden`: el usuario esta autenticado, pero no tiene permisos para esa accion.
+- `404 Not Found`: el recurso solicitado no existe.
+- `415 Unsupported Media Type`: el `Content-Type` no coincide con lo que espera el endpoint. Por ejemplo, enviar JSON a un endpoint que espera `multipart/form-data`.
+
+## Stack tecnico
+
+- Java
+- Spring Boot
+- Spring Web MVC
+- Spring Security
+- JWT con `jjwt`
+- Spring Data JPA
+- Hibernate
+- MySQL
+- Bean Validation / Jakarta Validation
+- Lombok
+- MapStruct
+- Springdoc OpenAPI / Swagger UI
+- Maven
+
+## Autores
+
+- Gallego Romero Gonzalo N.
+- Herrera Victor M.
+- Molina Cristian N.
+- Romero Rajoy Jose L.
