@@ -1,16 +1,15 @@
 package com.HiveGroup.HiveRH.Common.Security.Auth;
 
 import com.HiveGroup.HiveRH.Common.Security.Config.JwtService;
-import com.HiveGroup.HiveRH.Features.Account.AccountDTO;
+import com.HiveGroup.HiveRH.Features.Account.DTO.AccountDTO;
 import com.HiveGroup.HiveRH.Features.Account.AccountService;
-import com.HiveGroup.HiveRH.Features.Account.NewAccountDTO;
+import com.HiveGroup.HiveRH.Features.Account.DTO.NewAccountDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController

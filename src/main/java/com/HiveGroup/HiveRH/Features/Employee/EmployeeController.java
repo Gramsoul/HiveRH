@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,8 +20,14 @@ import java.util.List;
 public class EmployeeController {
     private final EmployeeService employeeService;
 
+    @GetMapping("/me")
+    public ResponseEntity<EmployeeResponseDTO> getCurrentEmployee(){
+        return ResponseEntity.ok(employeeService.findCurrentEmployee());
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<EmployeeResponseDTO> getEmployeeById(@NonNull @PathVariable Long id){
+    @PreAuthorize("@securityAuthorizationService.canAccessEmployee(#id)")
+    public ResponseEntity<EmployeeResponseDTO> getEmployeeById(@P("id") @NonNull @PathVariable Long id){
         EmployeeResponseDTO employee = employeeService.findById(id);
         return ResponseEntity.ok(employee);
     }

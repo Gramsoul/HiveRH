@@ -9,19 +9,21 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.NoSuchElementException;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -40,28 +42,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().getAuthentication();
 
             if (username != null && authentication == null) {
-                List<GrantedAuthority> authorities =
-                        jwtService.extractAuthorities(jwt);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                if (!jwtService.isTokenValid(jwt, userDetails)) {
+                    writeUnauthorizedResponse(response, request);
+                    return;
+                }
                 UsernamePasswordAuthenticationToken authToken = new
                         UsernamePasswordAuthenticationToken(
-                        username,
+                        userDetails,
                         null,
-                        authorities
+                        userDetails.getAuthorities()
                 );
                 authToken.setDetails(new
                         WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
-        } catch (JwtException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write(String.format("{\"error\": \"Token JWT invalido o expirado\", \"status\": %d, \"path\": \"%s\"}",
-                    HttpServletResponse.SC_UNAUTHORIZED,
-                    request.getRequestURI()));
-            response.getWriter().flush();
+        } catch (JwtException | NoSuchElementException e) {
+            writeUnauthorizedResponse(response, request);
             return;
         }
         filterChain.doFilter(request, response);
     }
-}
 
+    private void writeUnauthorizedResponse(HttpServletResponse response,
+                                           HttpServletRequest request) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write(String.format("{\"error\": \"Token JWT invalido o expirado\", \"status\": %d, \"path\": \"%s\"}",
+                HttpServletResponse.SC_UNAUTHORIZED,
+                request.getRequestURI()));
+        response.getWriter().flush();
+    }
+}
