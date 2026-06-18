@@ -1,5 +1,6 @@
 package com.HiveGroup.HiveRH.Features.Variation.DTO;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Getter
@@ -9,6 +10,7 @@ import lombok.*;
 @Builder
 public class VariationResponse {
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Long idVariation;
 
     private String title;
