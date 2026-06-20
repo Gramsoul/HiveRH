@@ -2,6 +2,7 @@ package com.HiveGroup.HiveRH.Features.Employee.DTO;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.GenreEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
+import jakarta.validation.constraints.Pattern;
 
 import java.time.LocalDate;
 
@@ -10,6 +11,10 @@ public record EmployeeUpdateDTO(
         String lastName,
         String phoneNumber,
         GenreEnum genre,
+        @Pattern(
+                regexp = "^\\d{7,8}$",
+                message = "El DNI debe contener 7 u 8 números, sin puntos, letras ni espacios"
+        )
         String dni,
         String city,
         String address,

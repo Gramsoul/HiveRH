@@ -40,6 +40,9 @@ public class AccountEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     private StatusEnum statusEnum;
 
+    @Column(name = "must_change_password", nullable = false)
+    private boolean mustChangePassword = false;
+
     @OneToOne(mappedBy = "account")
     private EmployeeEntity employee;
 

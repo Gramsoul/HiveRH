@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -19,13 +20,15 @@ public class AccountService {
     private PasswordEncoder passwordEncoder;
 
 
-    public AccountDTO save(NewAccountDTO newAccountDTO){
+    public AccountDTO save(NewAccountDTO newAccountDTO) {
         validateCanCreateRole(newAccountDTO.rol());
 
         AccountEntity entity = accountMapper.toEntity(newAccountDTO);
-        entity.setPassword(
-                passwordEncoder.encode(entity.getPassword())
-        );
+
+        entity.setPassword(passwordEncoder.encode(entity.getPassword()) );
+
+        entity.setMustChangePassword(true);
+
         accountRepository.save(entity);
 
         return accountMapper.toDTO(entity);
@@ -56,23 +59,33 @@ public class AccountService {
         return accountMapper.toDTO(account);
     }
 
-    public AccountDTO updateCurrentPassword(String currentPassword, String newPassword) {
-        if (currentPassword == null || currentPassword.isBlank()) {
-            throw new IllegalArgumentException("La contraseña actual es obligatoria");
-        }
-        if (newPassword == null || newPassword.isBlank()) {
-            throw new IllegalArgumentException("La nueva contraseña es obligatoria");
-        }
-
+    @Transactional
+    public void updateCurrentPassword(
+            String currentPassword,
+            String newPassword
+    ) {
         AccountEntity account = getCurrentAccount();
+
         if (!passwordEncoder.matches(currentPassword, account.getPassword())) {
             throw new AccessDeniedException("La contraseña actual no es correcta");
         }
 
-        account.setPassword(passwordEncoder.encode(newPassword));
-        accountRepository.save(account);
+        if (passwordEncoder.matches(
+                newPassword,
+                account.getPassword()
+        )) {
+            throw new IllegalArgumentException("La nueva contraseña no puede ser igual a la contraseña actual");
+        }
 
-        return accountMapper.toDTO(account);
+        if ("123".equals(newPassword)) {
+            throw new IllegalArgumentException("La nueva contraseña no puede ser la contraseña temporal");
+        }
+
+        account.setPassword(passwordEncoder.encode(newPassword) );
+
+        account.setMustChangePassword(false);
+
+        accountRepository.save(account);
     }
 
     private void validateCanCreateRole(RolEnum rol) {

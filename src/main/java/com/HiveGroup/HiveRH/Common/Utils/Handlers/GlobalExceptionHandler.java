@@ -8,6 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.time.Instant;
 
@@ -55,5 +58,46 @@ public class GlobalExceptionHandler {
         error.setProperty("method", request.getMethod());
 
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ProblemDetail> validationError(
+            MethodArgumentNotValidException e,
+            HttpServletRequest request
+    ) {
+        ProblemDetail error =
+                ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+
+        error.setTitle("Error de validación");
+        error.setDetail(
+                "Uno o más campos contienen valores inválidos"
+        );
+
+        Map<String, String> fieldErrors =
+                new LinkedHashMap<>();
+
+        e.getBindingResult()
+                .getFieldErrors()
+                .forEach(fieldError ->
+                        fieldErrors.putIfAbsent(
+                                fieldError.getField(),
+                                fieldError.getDefaultMessage()
+                        )
+                );
+
+        error.setProperty("errors", fieldErrors);
+        error.setProperty("timestamp", Instant.now());
+        error.setProperty(
+                "path",
+                request.getRequestURI()
+        );
+        error.setProperty(
+                "method",
+                request.getMethod()
+        );
+
+        return new ResponseEntity<>(
+                error,
+                HttpStatus.BAD_REQUEST
+        );
     }
 }

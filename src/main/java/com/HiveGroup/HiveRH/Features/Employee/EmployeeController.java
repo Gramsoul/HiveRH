@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -39,19 +40,32 @@ public class EmployeeController {
     }
 
     @PostMapping
-    public ResponseEntity<EmployeeResponseDTO> createEmployee(@NonNull @RequestBody EmployeeCreateDTO employeeCreateDTO){
-        return ResponseEntity.status(HttpStatus.CREATED).body(employeeService.create(employeeCreateDTO));
+    public ResponseEntity<EmployeeResponseDTO> createEmployee(
+            @NonNull @Valid @RequestBody EmployeeCreateDTO employeeCreateDTO)
+    {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(employeeService.create(employeeCreateDTO));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<EmployeeResponseDTO> patchEmployee(@NonNull @PathVariable Long id,@NonNull @RequestBody EmployeeUpdateDTO employeeUpdateDTO){
-        return  ResponseEntity.ok(employeeService.patchById(id, employeeUpdateDTO));
+    public ResponseEntity<EmployeeResponseDTO> patchEmployee(
+            @NonNull @PathVariable Long id,
+            @NonNull @Valid @RequestBody EmployeeUpdateDTO employeeUpdateDTO
+    ) {
+        return ResponseEntity.ok(
+                employeeService.patchById(id, employeeUpdateDTO)
+        );
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EmployeeResponseDTO> putEmployee(@NonNull @PathVariable Long id, @NonNull @RequestBody EmployeeUpdateDTO employeeUpdateDTO)
-    {
-        return ResponseEntity.ok(employeeService.patchById(id, employeeUpdateDTO));
+    public ResponseEntity<EmployeeResponseDTO> putEmployee(
+            @NonNull @PathVariable Long id,
+            @NonNull @Valid @RequestBody EmployeeUpdateDTO employeeUpdateDTO
+    ) {
+        return ResponseEntity.ok(
+                employeeService.putById(id, employeeUpdateDTO)
+        );
     }
 
     @DeleteMapping("/{id}")

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -31,10 +32,11 @@ public class AccountController {
     }
 
     @PatchMapping("/me/password")
-    public ResponseEntity<AccountDTO> updateMyPassword(@NonNull @RequestBody UpdateAccountPasswordDTO request) {
-        return ResponseEntity.ok(accountService.updateCurrentPassword(
-                request.currentPassword(),
-                request.newPassword()
-        ));
+    public ResponseEntity<Void> updateMyPassword(
+            @Valid @RequestBody UpdateAccountPasswordDTO request
+    ) {
+        accountService.updateCurrentPassword(request.currentPassword(), request.newPassword() );
+
+        return ResponseEntity.noContent().build();
     }
 }

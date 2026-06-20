@@ -42,7 +42,7 @@ public class EmployeeEntity {
     @Enumerated(EnumType.STRING)
     private GenreEnum genre;
 
-    @Column(name = "dni", nullable = false, length = 100)
+    @Column(name = "dni", nullable = false, length = 8, unique = true)
     private String dni;
 
     @Column(name = "city", nullable = false, length = 100)
