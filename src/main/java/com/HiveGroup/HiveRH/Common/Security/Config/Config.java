@@ -38,6 +38,7 @@ public class Config {
                         .requestMatchers(HttpMethod.PUT, "/api/employees/**").hasAnyRole("ADMIN", "RRHH")
                         .requestMatchers(HttpMethod.PATCH, "/api/employees/**").hasAnyRole("ADMIN", "RRHH")
                         .requestMatchers(HttpMethod.DELETE, "/api/employees/**").hasAnyRole("ADMIN", "RRHH")
+                        .requestMatchers(HttpMethod.GET, "/api/employees/page").hasAnyRole("ADMIN", "RRHH")
                         .requestMatchers(HttpMethod.POST, "/api/branch").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/branch/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/branch/**").hasRole("ADMIN")

@@ -1,5 +1,6 @@
 package com.HiveGroup.HiveRH.Features.Employee;
 
+import com.HiveGroup.HiveRH.Common.Utils.DTOs.PageResponseDTO;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.RolEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
@@ -10,21 +11,21 @@ import com.HiveGroup.HiveRH.Features.Branch.BranchEntity;
 import com.HiveGroup.HiveRH.Features.Branch.BranchRepository;
 import com.HiveGroup.HiveRH.Features.Department.DepartamentRepository;
 import com.HiveGroup.HiveRH.Features.Department.DepartmentEntity;
-import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeCreateDTO;
-import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeFilterDTO;
-import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeResponseDTO;
-import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeUpdateDTO;
+import com.HiveGroup.HiveRH.Features.Employee.DTO.*;
 import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentDTO;
 import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity;
 import com.HiveGroup.HiveRH.Features.Position.PositionEntity;
 import com.HiveGroup.HiveRH.Features.Position.PositionRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -213,6 +214,22 @@ public class EmployeeService {
                 .filter(employee -> activeFilters.min_salary() == null || employee.baseSalary() >= activeFilters.min_salary())
                 .filter(employee -> activeFilters.max_salary() == null || employee.baseSalary() <= activeFilters.max_salary())
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponseDTO<EmployeeResponseDTO> getAllPage(Pageable pageable){
+        Page<EmployeeEntity> page = employeeRepository.findAll(pageable);
+
+        return new PageResponseDTO<>(
+                page.getContent()
+                        .stream()
+                        .map(this::toDTO)
+                        .toList(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
     }
 
     private EmployeeResponseDTO toDTO(EmployeeEntity employee){
