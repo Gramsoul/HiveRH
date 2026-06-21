@@ -4,6 +4,7 @@ import com.HiveGroup.HiveRH.Common.Utils.Enums.RolEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Features.Account.DTO.AccountDTO;
 import com.HiveGroup.HiveRH.Features.Account.DTO.NewAccountDTO;
+import com.HiveGroup.HiveRH.Features.Account.DTO.ResponseAccountDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -19,7 +20,7 @@ public class AccountService {
     private PasswordEncoder passwordEncoder;
 
 
-    public AccountDTO save(NewAccountDTO newAccountDTO){
+    public ResponseAccountDTO save(NewAccountDTO newAccountDTO){
         validateCanCreateRole(newAccountDTO.rol());
 
         AccountEntity entity = accountMapper.toEntity(newAccountDTO);
@@ -28,10 +29,10 @@ public class AccountService {
         );
         accountRepository.save(entity);
 
-        return accountMapper.toDTO(entity);
+        return accountMapper.toResponse(entity);
     }
 
-    public AccountDTO updateRole(Long id, RolEnum rol) {
+    public ResponseAccountDTO updateRole(Long id, RolEnum rol) {
         if (rol == null) {
             throw new IllegalArgumentException("El rol es obligatorio");
         }
@@ -41,10 +42,10 @@ public class AccountService {
         account.setRol(rol);
         accountRepository.save(account);
 
-        return accountMapper.toDTO(account);
+        return accountMapper.toResponse(account);
     }
 
-    public AccountDTO updateCurrentEmail(String email) {
+    public ResponseAccountDTO updateCurrentEmail(String email) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("El email es obligatorio");
         }
@@ -53,10 +54,10 @@ public class AccountService {
         account.setEmail(email);
         accountRepository.save(account);
 
-        return accountMapper.toDTO(account);
+        return accountMapper.toResponse(account);
     }
 
-    public AccountDTO updateCurrentPassword(String currentPassword, String newPassword) {
+    public ResponseAccountDTO updateCurrentPassword(String currentPassword, String newPassword) {
         if (currentPassword == null || currentPassword.isBlank()) {
             throw new IllegalArgumentException("La contraseña actual es obligatoria");
         }
@@ -72,7 +73,7 @@ public class AccountService {
         account.setPassword(passwordEncoder.encode(newPassword));
         accountRepository.save(account);
 
-        return accountMapper.toDTO(account);
+        return accountMapper.toResponse(account);
     }
 
     private void validateCanCreateRole(RolEnum rol) {
