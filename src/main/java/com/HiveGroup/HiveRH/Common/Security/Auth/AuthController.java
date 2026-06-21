@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,14 +21,14 @@ public class AuthController {
     private final JwtService jwtService;
 
     @PostMapping("/api/auth/login")
-    public ResponseEntity<AuthResponse> authenticateUser(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<AuthResponse> authenticateUser(@Valid @RequestBody AuthRequest authRequest) {
         UserDetails user = authService.authenticate(authRequest);
         String token = jwtService.generateToken(user);
         return ResponseEntity.ok(new AuthResponse(token, user.getUsername()));
     }
 
     @PostMapping("/api/auth/register")
-    public ResponseEntity<AccountDTO> registerUser(@RequestBody
+    public ResponseEntity<AccountDTO> registerUser(@Valid @RequestBody
                                                    NewAccountDTO newAccountDTO) {
         return new ResponseEntity<>(accountService.save(newAccountDTO),HttpStatus.CREATED);
     }

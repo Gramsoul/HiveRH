@@ -57,19 +57,26 @@ public class AccountService {
     }
 
     public AccountDTO updateCurrentPassword(String currentPassword, String newPassword) {
-        if (currentPassword == null || currentPassword.isBlank()) {
-            throw new IllegalArgumentException("La contraseña actual es obligatoria");
-        }
-        if (newPassword == null || newPassword.isBlank()) {
-            throw new IllegalArgumentException("La nueva contraseña es obligatoria");
-        }
-
         AccountEntity account = getCurrentAccount();
+
         if (!passwordEncoder.matches(currentPassword, account.getPassword())) {
             throw new AccessDeniedException("La contraseña actual no es correcta");
         }
 
+        if (newPassword.equals(account.getUsername())) {
+            throw new IllegalArgumentException(
+                    "La nueva contraseña no puede ser igual al DNI"
+            );
+        }
+
+        if (passwordEncoder.matches(newPassword, account.getPassword())) {
+            throw new IllegalArgumentException(
+                    "La nueva contraseña no puede ser igual a la contraseña actual"
+            );
+        }
+
         account.setPassword(passwordEncoder.encode(newPassword));
+
         accountRepository.save(account);
 
         return accountMapper.toDTO(account);
