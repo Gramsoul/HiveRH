@@ -1,11 +1,13 @@
 package com.HiveGroup.HiveRH.Features.Payroll;
 
+import com.HiveGroup.HiveRH.Common.Utils.DTOs.PageResponseDTO;
 import com.HiveGroup.HiveRH.Features.Payroll.DTO.PayrollFilterDTO;
 import com.HiveGroup.HiveRH.Features.Payroll.DTO.PayrollRequest;
 import com.HiveGroup.HiveRH.Features.Payroll.DTO.PayrollResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,10 +23,16 @@ public class PayrollController {
 
     private final PayrollService payrollService;
 
+//    @GetMapping
+//    @PreAuthorize("hasAnyRole('ADMIN', 'RRHH')")
+//    public ResponseEntity<List<PayrollResponse>> getAllPayrolls() {
+//        return ResponseEntity.ok(payrollService.findAll());
+//    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'RRHH')")
-    public ResponseEntity<List<PayrollResponse>> getAllPayrolls() {
-        return ResponseEntity.ok(payrollService.findAll());
+    public ResponseEntity<PageResponseDTO<PayrollResponse>> getAllPayrollsForPage(Pageable pageable) {
+        return ResponseEntity.ok(payrollService.getAllPages(pageable));
     }
 
     @GetMapping("/employee/{id_employee}")
