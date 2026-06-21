@@ -45,6 +45,19 @@ public class AccountService {
         return accountMapper.toResponse(account);
     }
 
+    public ResponseAccountDTO updateRoleDNI(String dni, RolEnum rol) {
+        if (rol == null) {
+            throw new IllegalArgumentException("El rol es obligatorio");
+        }
+
+        AccountEntity account = accountRepository.findByUser(dni)
+                .orElseThrow(() -> new EntityNotFoundException("Cuenta inexistente", "AccountEntity"));
+        account.setRol(rol);
+        accountRepository.save(account);
+
+        return accountMapper.toResponse(account);
+    }
+
     public ResponseAccountDTO updateCurrentEmail(String email) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("El email es obligatorio");

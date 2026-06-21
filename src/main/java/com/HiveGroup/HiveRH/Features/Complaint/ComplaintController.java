@@ -36,7 +36,7 @@ public class ComplaintController {
 
     // POST - api/complaint
     @PostMapping
-    @PreAuthorize("@securityAuthorizationService.canCreateComplaintForEmployee(#request.idEmployee())")
+    @PreAuthorize("@securityAuthorizationService.canCreateComplaintForEmployeeDni(#request.dni())")
     @Operation(summary = "Crear denuncia", description = "Registra una denuncia asociada a un empleado activo. Al crearse queda en estado PENDING.")
     public ResponseEntity<ComplaintResponse> create(
             @P("request") @Valid @RequestBody ComplaintRequest request

@@ -77,6 +77,17 @@ public class SecurityAuthorizationService {
         return canAccessEmployee(employeeId);
     }
 
+    public boolean canCreateComplaintForEmployeeDni(String dni) {
+        if (hasAnyRole("ROLE_ADMIN", "ROLE_RRHH")) {
+            return true;
+        }
+
+        AccountEntity account = getCurrentAccount();
+        return account != null
+                && account.getEmployee() != null
+                && account.getEmployee().getDni().equals(dni);
+    }
+
     public boolean canDeleteLicense(Long licenseId) {
         if (hasAnyRole("ROLE_ADMIN")) {
             return true;
