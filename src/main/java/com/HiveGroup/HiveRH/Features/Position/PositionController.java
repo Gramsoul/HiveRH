@@ -3,6 +3,7 @@ package com.HiveGroup.HiveRH.Features.Position;
 import com.HiveGroup.HiveRH.Features.Position.DTO.PositionFilterDTO;
 import com.HiveGroup.HiveRH.Features.Position.DTO.PositionRequestDTO;
 import com.HiveGroup.HiveRH.Features.Position.DTO.PositionResponseDTO;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.http.HttpStatus;
@@ -23,7 +24,7 @@ public class PositionController {
     }
 
     @PostMapping
-    public ResponseEntity<PositionResponseDTO> createPosition(@NonNull @RequestBody PositionRequestDTO request) {
+    public ResponseEntity<PositionResponseDTO> createPosition(@NonNull @Valid @RequestBody PositionRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(positionService.create(request));
     }
 

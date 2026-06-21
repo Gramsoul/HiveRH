@@ -3,6 +3,7 @@ package com.HiveGroup.HiveRH.Features.License;
 import com.HiveGroup.HiveRH.Features.License.DTO.LicenseDTO;
 import com.HiveGroup.HiveRH.Features.License.DTO.LicenseFilterDTO;
 import com.HiveGroup.HiveRH.Features.License.DTO.RequestLicenseDTO;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,7 +34,7 @@ public class LicenseController {
 
     @PostMapping("/api/license")
     @PreAuthorize("@securityAuthorizationService.canCreateLicenseForEmployee(#license.idEmployee())")
-    public ResponseEntity<LicenseDTO> postLicense(@P("license") @RequestBody @NotNull RequestLicenseDTO license) {
+    public ResponseEntity<LicenseDTO> postLicense(@P("license") @Valid @RequestBody @NotNull RequestLicenseDTO license) {
         return ResponseEntity.status(HttpStatus.CREATED).body(licenseService.createLicense(license));
     }
 

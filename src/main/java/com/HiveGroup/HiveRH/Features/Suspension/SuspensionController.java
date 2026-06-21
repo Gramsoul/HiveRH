@@ -3,6 +3,7 @@ package com.HiveGroup.HiveRH.Features.Suspension;
 import com.HiveGroup.HiveRH.Features.Suspension.DTO.SuspensionFilterDTO;
 import com.HiveGroup.HiveRH.Features.Suspension.DTO.SuspensionRequestDTO;
 import com.HiveGroup.HiveRH.Features.Suspension.DTO.SuspensionResponseDTO;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class SuspensionController {
     }
 
     @PostMapping
-    public ResponseEntity<SuspensionResponseDTO> createSuspension(@RequestBody SuspensionRequestDTO request) {
+    public ResponseEntity<SuspensionResponseDTO> createSuspension(@Valid @RequestBody SuspensionRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(suspensionService.create(request));
     }
 }

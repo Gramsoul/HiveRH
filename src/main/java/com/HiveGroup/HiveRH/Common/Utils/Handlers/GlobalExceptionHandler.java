@@ -8,10 +8,12 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -85,5 +87,21 @@ public class GlobalExceptionHandler {
         error.setProperty("method", request.getMethod());
 
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ProblemDetail> handleValidationExceptions(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        ProblemDetail error = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        String errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+
+        error.setTitle(HttpStatus.BAD_REQUEST.getReasonPhrase());
+        error.setDetail(errors);
+        error.setProperty("timestamp", Instant.now());
+        error.setProperty("path", request.getRequestURI());
+        error.setProperty("method", request.getMethod());
+
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 }

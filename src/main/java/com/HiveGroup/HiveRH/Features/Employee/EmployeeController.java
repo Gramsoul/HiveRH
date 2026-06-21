@@ -4,6 +4,7 @@ import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeFilterDTO;
 import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeCreateDTO;
 import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeResponseDTO;
 import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeUpdateDTO;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.http.HttpStatus;
@@ -39,17 +40,17 @@ public class EmployeeController {
     }
 
     @PostMapping
-    public ResponseEntity<EmployeeResponseDTO> createEmployee(@NonNull @RequestBody EmployeeCreateDTO employeeCreateDTO){
+    public ResponseEntity<EmployeeResponseDTO> createEmployee(@NonNull @Valid @RequestBody EmployeeCreateDTO employeeCreateDTO){
         return ResponseEntity.status(HttpStatus.CREATED).body(employeeService.create(employeeCreateDTO));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<EmployeeResponseDTO> patchEmployee(@NonNull @PathVariable Long id,@NonNull @RequestBody EmployeeUpdateDTO employeeUpdateDTO){
+    public ResponseEntity<EmployeeResponseDTO> patchEmployee(@NonNull @PathVariable Long id, @NonNull @RequestBody EmployeeUpdateDTO employeeUpdateDTO){
         return  ResponseEntity.ok(employeeService.patchById(id, employeeUpdateDTO));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EmployeeResponseDTO> putEmployee(@NonNull @PathVariable Long id, @NonNull @RequestBody EmployeeUpdateDTO employeeUpdateDTO)
+    public ResponseEntity<EmployeeResponseDTO> putEmployee(@NonNull @PathVariable Long id, @NonNull @Valid @RequestBody EmployeeUpdateDTO employeeUpdateDTO)
     {
         return ResponseEntity.ok(employeeService.patchById(id, employeeUpdateDTO));
     }

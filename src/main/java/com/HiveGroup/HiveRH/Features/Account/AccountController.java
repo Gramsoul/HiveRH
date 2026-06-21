@@ -1,6 +1,7 @@
 package com.HiveGroup.HiveRH.Features.Account;
 
 import com.HiveGroup.HiveRH.Features.Account.DTO.*;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.http.ResponseEntity;
@@ -18,17 +19,17 @@ public class AccountController {
 
     @PatchMapping("/{id}/role")
     public ResponseEntity<ResponseAccountDTO> updateRole(@NonNull @PathVariable Long id,
-                                                         @NonNull @RequestBody UpdateAccountRoleDTO request) {
+                                                         @NonNull @Valid @RequestBody UpdateAccountRoleDTO request) {
         return ResponseEntity.ok(accountService.updateRole(id, request.rol()));
     }
 
     @PatchMapping("/me/email")
-    public ResponseEntity<ResponseAccountDTO> updateMyEmail(@NonNull @RequestBody UpdateAccountEmailDTO request) {
+    public ResponseEntity<ResponseAccountDTO> updateMyEmail(@NonNull @Valid @RequestBody UpdateAccountEmailDTO request) {
         return ResponseEntity.ok(accountService.updateCurrentEmail(request.email()));
     }
 
     @PatchMapping("/me/password")
-    public ResponseEntity<ResponseAccountDTO> updateMyPassword(@NonNull @RequestBody UpdateAccountPasswordDTO request) {
+    public ResponseEntity<ResponseAccountDTO> updateMyPassword(@NonNull @Valid @RequestBody UpdateAccountPasswordDTO request) {
         return ResponseEntity.ok(accountService.updateCurrentPassword(
                 request.currentPassword(),
                 request.newPassword()

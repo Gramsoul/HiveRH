@@ -3,6 +3,7 @@ package com.HiveGroup.HiveRH.Features.Department;
 import com.HiveGroup.HiveRH.Features.Department.DTO.DepartmentFilterDTO;
 import com.HiveGroup.HiveRH.Features.Department.DTO.DepartmentRequestDTO;
 import com.HiveGroup.HiveRH.Features.Department.DTO.DepartmentResponseDTO;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.http.HttpStatus;
@@ -23,7 +24,7 @@ public class DepartmentController {
     }
 
     @PostMapping
-    public ResponseEntity<DepartmentResponseDTO> createDepartment(@NonNull @RequestBody DepartmentRequestDTO request) {
+    public ResponseEntity<DepartmentResponseDTO> createDepartment(@NonNull @Valid @RequestBody DepartmentRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(departmentService.create(request));
     }
 
