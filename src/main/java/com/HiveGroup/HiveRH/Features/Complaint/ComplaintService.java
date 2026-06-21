@@ -28,9 +28,9 @@ public class ComplaintService {
     @Transactional
     public ComplaintResponse create(ComplaintRequest request) {
 
-        validateRequest(request);
-
-        EmployeeEntity employee = findEmployeeById(request.idEmployee());
+        //validateRequest(request);
+        EmployeeEntity employee = employeeRepository.findByDni(request.dni())
+                .orElseThrow(() -> new EntityNotFoundException("DNI NO ENCONTRADO", "EMPLOYEE"));
 
         validateEmployeeCanHaveComplaint(employee);
 
@@ -95,7 +95,13 @@ public class ComplaintService {
 
         ComplaintEntity updatedComplaint = complaintRepository.save(complaint);
 
-        notificationService.notify(complaint.getEmployee().getAccount().getEmail(), "Complaint revised");
+        notificationService.notify(complaint.getEmployee().getAccount().getEmail(),
+                """
+                        Buen dia,
+                        Se ha revisado la denuncia, nos contactaremos a la brevedad.
+                        
+                        Muchas gracias.
+                        """);
 
         return complaintMapper.toResponse(updatedComplaint);
     }
@@ -131,7 +137,7 @@ public class ComplaintService {
             throw new IllegalArgumentException("La descripción es obligatoria");
         }
 
-        if (request.idEmployee() == null) {
+        if (request.dni() == null) {
             throw new IllegalArgumentException("El empleado es obligatorio");
         }
     }

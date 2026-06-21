@@ -13,4 +13,5 @@ public interface ComplaintRepository extends JpaRepository<@NonNull ComplaintEnt
     List<ComplaintEntity> findByEmployee(EmployeeEntity employee);
 
     List<ComplaintEntity> findByStatus(ComplaintStatusEnum status);
+
 }

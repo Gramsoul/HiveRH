@@ -33,6 +33,14 @@ public class AccountController {
         return ResponseEntity.ok(accountService.updateRole(id, request.rol()));
     }
 
+    @PatchMapping("/{dni}/rol")
+    @Operation(summary = "Cambiar rol de cuenta", description = "Permite modificar el rol de una cuenta existente. Se utiliza para administrar permisos de acceso dentro del sistema.")
+    public ResponseEntity<ResponseAccountDTO> updateRoleDNI(
+            @PathVariable @Positive(message = "El ID de la cuenta debe ser mayor que cero") String dni,
+            @Valid @RequestBody UpdateAccountRoleDTO request) {
+        return ResponseEntity.ok(accountService.updateRoleDNI(dni, request.rol()));
+    }
+
     @PatchMapping("/me/email")
     @Operation(summary = "Cambiar email propio", description = "Actualiza el email de la cuenta asociada al token autenticado.")
     public ResponseEntity<ResponseAccountDTO> updateMyEmail(@Valid @RequestBody UpdateAccountEmailDTO request) {
