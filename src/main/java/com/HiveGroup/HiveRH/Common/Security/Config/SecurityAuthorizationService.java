@@ -134,11 +134,6 @@ public class SecurityAuthorizationService {
             return null;
         }
 
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof AccountEntity account) {
-            return account;
-        }
-
         String username = authentication.getName();
         return accountRepository.findByUserOrEmail(username, username).orElse(null);
     }

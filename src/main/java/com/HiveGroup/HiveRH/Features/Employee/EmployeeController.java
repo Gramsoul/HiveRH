@@ -59,9 +59,9 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeService.patchById(id, employeeUpdateDTO));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<EmployeeResponseDTO> deleteEmployee(@NonNull @PathVariable Long id){
-        return ResponseEntity.ok(employeeService.deleteById(id));
+    @DeleteMapping("/{dni}")
+    public ResponseEntity<EmployeeResponseDTO> deleteEmployee(@NonNull @PathVariable String dni){
+        return ResponseEntity.ok(employeeService.deleteByDni(dni));
     }
 
 }

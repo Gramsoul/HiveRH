@@ -106,7 +106,10 @@ Content-Type: {{json}}
   "id_department": {{departmentId}}
 }
 
-> {% client.global.set("employeeId", response.body.id_employee); %}
+> {%
+    client.global.set("employeeId", response.body.id_employee);
+    client.global.set("employeeDni", response.body.dni);
+%}
 
 ### 10. Obtener empleado por id
 GET {{baseUrl}}/api/employees/{{employeeId}}
@@ -350,7 +353,7 @@ DELETE {{baseUrl}}/api/certificate/{{certificateId}}
 Authorization: Bearer {{token}}
 
 ### 39. Limpieza opcional: borrar empleado
-DELETE {{baseUrl}}/api/employees/{{employeeId}}
+DELETE {{baseUrl}}/api/employees/{{employeeDni}}
 Authorization: Bearer {{token}}
 
 ### 40. Limpieza opcional: borrar puesto

@@ -1,9 +1,6 @@
 package com.HiveGroup.HiveRH.Features.Account;
 
-import com.HiveGroup.HiveRH.Features.Account.DTO.AccountDTO;
-import com.HiveGroup.HiveRH.Features.Account.DTO.UpdateAccountEmailDTO;
-import com.HiveGroup.HiveRH.Features.Account.DTO.UpdateAccountPasswordDTO;
-import com.HiveGroup.HiveRH.Features.Account.DTO.UpdateAccountRoleDTO;
+import com.HiveGroup.HiveRH.Features.Account.DTO.*;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.http.ResponseEntity;
@@ -20,18 +17,18 @@ public class AccountController {
     private final AccountService accountService;
 
     @PatchMapping("/{id}/role")
-    public ResponseEntity<AccountDTO> updateRole(@NonNull @PathVariable Long id,
-                                                 @NonNull @RequestBody UpdateAccountRoleDTO request) {
+    public ResponseEntity<ResponseAccountDTO> updateRole(@NonNull @PathVariable Long id,
+                                                         @NonNull @RequestBody UpdateAccountRoleDTO request) {
         return ResponseEntity.ok(accountService.updateRole(id, request.rol()));
     }
 
     @PatchMapping("/me/email")
-    public ResponseEntity<AccountDTO> updateMyEmail(@NonNull @RequestBody UpdateAccountEmailDTO request) {
+    public ResponseEntity<ResponseAccountDTO> updateMyEmail(@NonNull @RequestBody UpdateAccountEmailDTO request) {
         return ResponseEntity.ok(accountService.updateCurrentEmail(request.email()));
     }
 
     @PatchMapping("/me/password")
-    public ResponseEntity<AccountDTO> updateMyPassword(@NonNull @RequestBody UpdateAccountPasswordDTO request) {
+    public ResponseEntity<ResponseAccountDTO> updateMyPassword(@NonNull @RequestBody UpdateAccountPasswordDTO request) {
         return ResponseEntity.ok(accountService.updateCurrentPassword(
                 request.currentPassword(),
                 request.newPassword()
