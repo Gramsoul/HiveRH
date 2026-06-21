@@ -13,4 +13,7 @@ public interface EmployeeRepository extends JpaRepository<@NonNull EmployeeEntit
     Optional<EmployeeEntity> findByDni(String dni);
 
     Optional<EmployeeEntity> findByAccount(AccountEntity account);
+  
+    boolean existsByDni(String dni);
+
 }
