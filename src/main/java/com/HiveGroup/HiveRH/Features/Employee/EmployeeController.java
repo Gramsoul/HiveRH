@@ -1,16 +1,16 @@
 package com.HiveGroup.HiveRH.Features.Employee;
 
-import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeFilterDTO;
-import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeCreateDTO;
-import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeResponseDTO;
-import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeUpdateDTO;
+import com.HiveGroup.HiveRH.Common.Utils.DTOs.PageResponseDTO;
+import com.HiveGroup.HiveRH.Features.Employee.DTO.*;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 
@@ -38,6 +38,11 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeService.findAllbyFilter(filters));
     }
 
+    @GetMapping("/page")
+    public ResponseEntity<PageResponseDTO<EmployeeResponseDTO>> getAllPageable(Pageable pageable){
+        return ResponseEntity.ok(employeeService.getAllPage(pageable));
+    }
+
     @PostMapping
     public ResponseEntity<EmployeeResponseDTO> createEmployee(@NonNull @RequestBody EmployeeCreateDTO employeeCreateDTO){
         return ResponseEntity.status(HttpStatus.CREATED).body(employeeService.create(employeeCreateDTO));
@@ -54,9 +59,9 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeService.patchById(id, employeeUpdateDTO));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<EmployeeResponseDTO> deleteEmployee(@NonNull @PathVariable Long id){
-        return ResponseEntity.ok(employeeService.deleteById(id));
+    @DeleteMapping("/{dni}")
+    public ResponseEntity<EmployeeResponseDTO> deleteEmployee(@NonNull @PathVariable String dni){
+        return ResponseEntity.ok(employeeService.deleteByDni(dni));
     }
 
 }
