@@ -99,4 +99,3 @@ public class JwtService {
         return expiration.before(new Date());
     }
 }
-
