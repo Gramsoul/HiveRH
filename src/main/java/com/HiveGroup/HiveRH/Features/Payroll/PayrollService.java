@@ -1,5 +1,6 @@
 package com.HiveGroup.HiveRH.Features.Payroll;
 
+import com.HiveGroup.HiveRH.Common.Utils.DTOs.PageResponseDTO;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
@@ -10,6 +11,8 @@ import com.HiveGroup.HiveRH.Features.Payroll.DTO.PayrollResponse;
 import com.HiveGroup.HiveRH.Features.Variation.VariationEntity;
 import com.HiveGroup.HiveRH.Features.Variation.VariationRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,6 +69,21 @@ public class PayrollService {
         List<PayrollEntity> payrolls = payrollRepository.findAll();
 
         return payrollMapper.toResponseList(payrolls);
+    }
+
+    public PageResponseDTO<PayrollResponse> getAllPages(Pageable pageable){
+        Page<PayrollEntity> page = payrollRepository.findAll(pageable);
+
+        return new PageResponseDTO<>(
+                page.getContent()
+                        .stream()
+                        .map(payrollMapper::toResponse)
+                        .toList(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
     }
 
     // Listar liquidaciones de un empleado con filtros opcionales

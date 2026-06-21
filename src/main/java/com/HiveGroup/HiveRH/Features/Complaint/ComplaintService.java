@@ -2,6 +2,7 @@ package com.HiveGroup.HiveRH.Features.Complaint;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
+import com.HiveGroup.HiveRH.Common.Utils.Services.NotificationService;
 import com.HiveGroup.HiveRH.Features.Complaint.DTO.ComplaintFilterDTO;
 import com.HiveGroup.HiveRH.Features.Complaint.DTO.ComplaintRequest;
 import com.HiveGroup.HiveRH.Features.Complaint.DTO.ComplaintResponse;
@@ -21,6 +22,7 @@ public class ComplaintService {
     private final ComplaintRepository complaintRepository;
     private final EmployeeRepository employeeRepository;
     private final ComplaintMapper complaintMapper;
+    private final NotificationService notificationService;
 
 
     @Transactional
@@ -92,6 +94,8 @@ public class ComplaintService {
         complaint.setStatus(ComplaintStatusEnum.REVIEWED);
 
         ComplaintEntity updatedComplaint = complaintRepository.save(complaint);
+
+        notificationService.notify(complaint.getEmployee().getAccount().getEmail(), "Complaint revised");
 
         return complaintMapper.toResponse(updatedComplaint);
     }

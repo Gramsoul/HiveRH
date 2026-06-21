@@ -215,7 +215,7 @@ Al registrar una suspensión, el sistema cambia automáticamente el estado del e
 
 - Con sucursal, puesto y departamento ya existentes, se crea el empleado mediante POST /api/employees.
 - El empleado nace con estado ACTIVE.
-- El sistema crea automáticamente una cuenta por defecto para ese empleado: usuario_{id}, email usuario_{id}@hiverh.local y contraseña inicial 123.
+- El sistema crea automáticamente una cuenta por defecto para ese empleado: usuario igual al DNI, email {dni}@hiverh.local y contraseña inicial igual al DNI.
 - La respuesta del empleado incluye sus datos personales, estado, sucursal, cuenta asociada y asignación con puesto/departamento.
 
 ---
@@ -424,7 +424,7 @@ Solo modifica los campos enviados en la solicitud.
 
 Actualiza los datos del empleado.
 
-### DELETE /api/employees/{id}
+### DELETE /api/employees/{dni}
 
 Realiza una baja lógica del empleado.
 

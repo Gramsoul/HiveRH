@@ -4,12 +4,13 @@ import com.HiveGroup.HiveRH.Features.Branch.DTO.BranchCreateDTO;
 import com.HiveGroup.HiveRH.Features.Branch.DTO.BranchResponseDTO;
 import com.HiveGroup.HiveRH.Features.Branch.DTO.BranchUpdateDTO;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
+
 
 import java.util.List;
 
