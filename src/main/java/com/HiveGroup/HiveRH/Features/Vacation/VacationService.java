@@ -32,7 +32,7 @@ public class VacationService {
         // Valida que los datos obligatorios del request.
         validateRequest(request);
 
-        EmployeeEntity employee = findEmployeeById(request.idEmployee());
+        EmployeeEntity employee = findEmployeeById(request.dniEmployee());
 
         validateEmployeeCanHaveVacation(employee, request.startDate());
 
@@ -96,7 +96,7 @@ public class VacationService {
 
         VacationEntity vacation = findVacationById(idVacation);
 
-        EmployeeEntity employee = findEmployeeById(request.idEmployee());
+        EmployeeEntity employee = findEmployeeById(request.dniEmployee());
 
         validateEmployeeCanHaveVacation(employee, request.startDate());
 
@@ -158,9 +158,9 @@ public class VacationService {
     }
 
     // Buscar empleado o lanzar error
-    private EmployeeEntity findEmployeeById(Long idEmployee) {
+    private EmployeeEntity findEmployeeById(String dniEmployee) {
 
-        return employeeRepository.findById(idEmployee)
+        return employeeRepository.findByDni(dniEmployee)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Empleado no encontrado",
                         "Employee"
@@ -170,7 +170,7 @@ public class VacationService {
     // Validar datos obligatorios
     private void validateRequest(VacationRequest request) {
 
-        if (request.idEmployee() == null) {
+        if (request.dniEmployee() == null) {
             throw new IllegalArgumentException("El empleado es obligatorio");
         }
 
