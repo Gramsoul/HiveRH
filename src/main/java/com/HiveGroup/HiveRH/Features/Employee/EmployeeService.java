@@ -17,6 +17,7 @@ import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity
 import com.HiveGroup.HiveRH.Features.Position.PositionEntity;
 import com.HiveGroup.HiveRH.Features.Position.PositionRepository;
 import lombok.AllArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -26,13 +27,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @AllArgsConstructor
 public class EmployeeService {
+
     private final EmployeeRepository employeeRepository;
     private final BranchRepository branchRepository;
     private final AccountRepository accountRepository;
@@ -42,21 +43,27 @@ public class EmployeeService {
 
     @Transactional
     public EmployeeResponseDTO create(EmployeeCreateDTO employeeCreateDTO) {
+
+        validateDniAvailable(employeeCreateDTO.dni());
+
         if (employeeCreateDTO.id_branch() == null) {
             throw new EntityNotFoundException("La sucursal es obligatoria", "Branch");
         }
+
         if (employeeCreateDTO.id_position() == null) {
             throw new EntityNotFoundException("El puesto es obligatorio", "Position");
         }
+
         if (employeeCreateDTO.id_department() == null) {
             throw new EntityNotFoundException("El departamento es obligatorio", "Department");
         }
-        validateDniAvailable(employeeCreateDTO.dni());
 
         BranchEntity branch = branchRepository.findById(employeeCreateDTO.id_branch())
                 .orElseThrow(() -> new EntityNotFoundException("Sucursal no encontrada", "Branch"));
+
         PositionEntity position = positionRepository.findById(employeeCreateDTO.id_position())
                 .orElseThrow(() -> new EntityNotFoundException("Puesto no encontrado", "Position"));
+
         DepartmentEntity department = departamentRepository.findById(employeeCreateDTO.id_department())
                 .orElseThrow(() -> new EntityNotFoundException("Departamento no encontrado", "Department"));
 
@@ -85,8 +92,10 @@ public class EmployeeService {
         employee.setAssignments(assignments);
 
         EmployeeEntity createdEmployee = employeeRepository.save(employee);
+
         AccountEntity defaultAccount = createDefaultAccount(createdEmployee);
         createdEmployee.setAccount(defaultAccount);
+
         createdEmployee = employeeRepository.save(createdEmployee);
 
         return toDTO(createdEmployee);
@@ -119,6 +128,8 @@ public class EmployeeService {
         EmployeeEntity employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado", "Employee"));
 
+        validateUniqueDni(employeeUpdateDTO.dni(), id);
+
         employee.setName(employeeUpdateDTO.name());
         employee.setLastName(employeeUpdateDTO.lastName());
         employee.setPhoneNumber(employeeUpdateDTO.phoneNumber());
@@ -131,56 +142,47 @@ public class EmployeeService {
         employee.setTerminationDate(employeeUpdateDTO.termination_date());
         employee.setStatus(employeeUpdateDTO.status());
         employee.setBaseSalary(employeeUpdateDTO.base_salary());
+
         BranchEntity branch = branchRepository.findById(employeeUpdateDTO.id_branch())
                 .orElseThrow(() -> new EntityNotFoundException("Sucursal no encontrada", "Branch"));
-        employee.setBranch(branch);
 
-        if (employeeUpdateDTO.id_account() != null) {
-            AccountEntity account = accountRepository.findById(employeeUpdateDTO.id_account())
-                    .orElseThrow(() -> new EntityNotFoundException("Cuenta no encotrada", "Account"));
-            employee.setAccount(account);
-        } else {
-            employee.setAccount(null);
-        }
+        employee.setBranch(branch);
 
         EmployeeEntity updatedEmployee = employeeRepository.save(employee);
 
         return toDTO(updatedEmployee);
     }
 
-
     @Transactional
-    public EmployeeResponseDTO patchById(Long id, EmployeeUpdateDTO employeeUpdateDTO) {
+    public EmployeeResponseDTO patchById(Long id, EmployeePatchDTO employeePatchDTO) {
 
         EmployeeEntity employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado", "Employee"));
 
-        employee.setName(employeeUpdateDTO.name() != null ? employeeUpdateDTO.name() : employee.getName());
-        employee.setLastName(employeeUpdateDTO.lastName() != null ? employeeUpdateDTO.lastName() : employee.getLastName());
-        employee.setPhoneNumber(employeeUpdateDTO.phoneNumber() != null ? employeeUpdateDTO.phoneNumber() : employee.getPhoneNumber());
-        employee.setGenre(employeeUpdateDTO.genre() != null ? employeeUpdateDTO.genre() : employee.getGenre());
-        employee.setDni(employeeUpdateDTO.dni() != null ? employeeUpdateDTO.dni() : employee.getDni());
-        employee.setCity(employeeUpdateDTO.city() != null ? employeeUpdateDTO.city() : employee.getCity());
-        employee.setAddress(employeeUpdateDTO.address() != null ? employeeUpdateDTO.address() : employee.getAddress());
-        employee.setBirthdate(employeeUpdateDTO.birth_date() != null ? employeeUpdateDTO.birth_date() : employee.getBirthdate());
-        employee.setHireDate(employeeUpdateDTO.hire_date() != null ? employeeUpdateDTO.hire_date() : employee.getHireDate());
-        employee.setTerminationDate(employeeUpdateDTO.termination_date() != null ? employeeUpdateDTO.termination_date() : employee.getTerminationDate());
-        employee.setStatus(employeeUpdateDTO.status() != null ? employeeUpdateDTO.status() : employee.getStatus());
-        employee.setBaseSalary(employeeUpdateDTO.base_salary() != null ? employeeUpdateDTO.base_salary() : employee.getBaseSalary());
+        if (employeePatchDTO.dni() != null) {
+            validateUniqueDni(employeePatchDTO.dni(), id);
+        }
 
+        employee.setName(employeePatchDTO.name() != null ? employeePatchDTO.name() : employee.getName());
+        employee.setLastName(employeePatchDTO.lastName() != null ? employeePatchDTO.lastName() : employee.getLastName());
+        employee.setPhoneNumber(employeePatchDTO.phoneNumber() != null ? employeePatchDTO.phoneNumber() : employee.getPhoneNumber());
+        employee.setGenre(employeePatchDTO.genre() != null ? employeePatchDTO.genre() : employee.getGenre());
+        employee.setDni(employeePatchDTO.dni() != null ? employeePatchDTO.dni() : employee.getDni());
+        employee.setCity(employeePatchDTO.city() != null ? employeePatchDTO.city() : employee.getCity());
+        employee.setAddress(employeePatchDTO.address() != null ? employeePatchDTO.address() : employee.getAddress());
+        employee.setBirthdate(employeePatchDTO.birth_date() != null ? employeePatchDTO.birth_date() : employee.getBirthdate());
+        employee.setHireDate(employeePatchDTO.hire_date() != null ? employeePatchDTO.hire_date() : employee.getHireDate());
+        employee.setTerminationDate(employeePatchDTO.termination_date() != null ? employeePatchDTO.termination_date() : employee.getTerminationDate());
+        employee.setStatus(employeePatchDTO.status() != null ? employeePatchDTO.status() : employee.getStatus());
+        employee.setBaseSalary(employeePatchDTO.base_salary() != null ? employeePatchDTO.base_salary() : employee.getBaseSalary());
 
-        if (employeeUpdateDTO.id_branch() != null) {
-            BranchEntity branch = branchRepository.findById(employeeUpdateDTO.id_branch())
+        if (employeePatchDTO.id_branch() != null) {
+            BranchEntity branch = branchRepository.findById(employeePatchDTO.id_branch())
                     .orElseThrow(() -> new EntityNotFoundException("Sucursal no encontrada", "Branch"));
 
             employee.setBranch(branch);
         }
 
-        if (employeeUpdateDTO.id_account() != null) {
-            AccountEntity account = accountRepository.findById(employeeUpdateDTO.id_account())
-                    .orElseThrow(() -> new EntityNotFoundException("Cuenta no encotrada", "Account"));
-            employee.setAccount(account);
-        }
         EmployeeEntity updatedEmployee = employeeRepository.save(employee);
 
         return toDTO(updatedEmployee);
@@ -190,17 +192,19 @@ public class EmployeeService {
     public EmployeeResponseDTO findById(Long id) {
         EmployeeEntity employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado", "Employee"));
+
         return toDTO(employee);
     }
 
     @Transactional(readOnly = true)
     public EmployeeResponseDTO findCurrentEmployee() {
         AccountEntity account = getCurrentAccount();
-        if (account.getEmployee() == null) {
-            throw new EntityNotFoundException("Empleado no encontrado para la cuenta autenticada", "Employee");
-        }
 
-        return toDTO(account.getEmployee());
+        EmployeeEntity employee = employeeRepository.findByAccount(account).orElseThrow(() -> new EntityNotFoundException("Empleado no encontrado para la cuenta autenticada", "Employee"));
+
+        loadEmployeeAssignments(employee);
+
+        return toDTO(employee);
     }
 
     @Transactional(readOnly = true)
@@ -208,8 +212,8 @@ public class EmployeeService {
         EmployeeFilterDTO activeFilters = filters != null
                 ? filters
                 : new EmployeeFilterDTO(null, null, null, null, null, null, null, null, null, null);
-        List<EmployeeEntity> employeeList = employeeRepository.findAll();
 
+        List<EmployeeEntity> employeeList = employeeRepository.findAll();
 
         return employeeList.stream()
                 .map(this::toDTO)
@@ -227,7 +231,7 @@ public class EmployeeService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponseDTO<EmployeeResponseDTO> getAllPage(Pageable pageable){
+    public PageResponseDTO<EmployeeResponseDTO> getAllPage(Pageable pageable) {
         Page<EmployeeEntity> page = employeeRepository.findAll(pageable);
 
         return new PageResponseDTO<>(
@@ -251,7 +255,8 @@ public class EmployeeService {
                         assignment.getDepartment().getDepartmentName(),
                         assignment.getPosition().getId_position(),
                         assignment.getPosition().getPositionName()
-                )).toList();
+                ))
+                .toList();
 
         return new EmployeeResponseDTO(
                 employee.getName(),
@@ -273,11 +278,12 @@ public class EmployeeService {
     }
 
     private AccountEntity createDefaultAccount(EmployeeEntity employee) {
-        String username = employee.getDni();
+        String dni = employee.getDni();
+
         AccountEntity account = AccountEntity.builder()
-                .user(username)
-                .email(username + "@hiverh.com")
-                .password(passwordEncoder.encode(employee.getDni()))
+                .user(dni)
+                .email(dni + "@hiverh.com")
+                .password(passwordEncoder.encode(dni))
                 .rol(RolEnum.EMPLOYEE)
                 .statusEnum(StatusEnum.ACTIVE)
                 .build();
@@ -286,26 +292,59 @@ public class EmployeeService {
     }
 
     private void validateDniAvailable(String dni) {
-        if (dni == null || dni.isBlank()) {
-            throw new IllegalArgumentException("El DNI es obligatorio");
-        }
-        if (employeeRepository.existsByDni(dni)) {
-            throw new IllegalArgumentException("Ya existe un empleado con ese DNI");
-        }
+        validateUniqueDni(dni, null);
+
         if (accountRepository.findByUserOrEmail(dni, dni + "@hiverh.com").isPresent()) {
             throw new IllegalArgumentException("Ya existe una cuenta asociada a ese DNI");
         }
     }
 
+    private void validateUniqueDni(String dni, Long currentEmployeeId) {
+        if (dni == null || dni.isBlank()) {
+            throw new IllegalArgumentException("El DNI es obligatorio");
+        }
+
+        employeeRepository.findByDni(dni)
+                .filter(employee ->
+                        currentEmployeeId == null
+                                || !employee.getId_employee().equals(currentEmployeeId)
+                )
+                .ifPresent(employee -> {
+                    throw new IllegalArgumentException(
+                            "Ya existe un empleado registrado con el DNI " + dni
+                    );
+                });
+    }
+
     private AccountEntity getCurrentAccount() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
+
+        if (authentication == null || !authentication.isAuthenticated()) {
             throw new AccessDeniedException("No hay usuario autenticado");
         }
 
-        String username = authentication.getName();
-        return accountRepository.findByUserOrEmail(username, username)
-                .orElseThrow(() -> new EntityNotFoundException("Cuenta inexistente", "AccountEntity"));
-    }
+        Object principal = authentication.getPrincipal();
 
+        if (principal instanceof AccountEntity account) {
+            return account;
+        }
+
+        String username = authentication.getName();
+
+        return accountRepository.findByUserOrEmail(username, username)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Cuenta inexistente",
+                        "AccountEntity"
+                ));
+    }
+    private void loadEmployeeAssignments(EmployeeEntity employee) {
+        if (employee.getAssignments() != null) {
+            Hibernate.initialize(employee.getAssignments());
+
+            employee.getAssignments().forEach(assignment -> {
+                Hibernate.initialize(assignment.getDepartment());
+                Hibernate.initialize(assignment.getPosition());
+            });
+        }
+    }
 }

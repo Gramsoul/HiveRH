@@ -15,6 +15,6 @@ public record ComplaintRequest(
         String description,
 
         @NotNull(message = "El empleado es obligatorio")
-        Long idEmployee
+        String dni
 ) {
 }

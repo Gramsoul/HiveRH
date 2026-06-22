@@ -45,6 +45,19 @@ public class AccountService {
         return accountMapper.toResponse(account);
     }
 
+    public ResponseAccountDTO updateRoleDNI(String dni, RolEnum rol) {
+        if (rol == null) {
+            throw new IllegalArgumentException("El rol es obligatorio");
+        }
+
+        AccountEntity account = accountRepository.findByUser(dni)
+                .orElseThrow(() -> new EntityNotFoundException("Cuenta inexistente", "AccountEntity"));
+        account.setRol(rol);
+        accountRepository.save(account);
+
+        return accountMapper.toResponse(account);
+    }
+
     public ResponseAccountDTO updateCurrentEmail(String email) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("El email es obligatorio");
@@ -58,19 +71,27 @@ public class AccountService {
     }
 
     public ResponseAccountDTO updateCurrentPassword(String currentPassword, String newPassword) {
-        if (currentPassword == null || currentPassword.isBlank()) {
-            throw new IllegalArgumentException("La contraseña actual es obligatoria");
-        }
-        if (newPassword == null || newPassword.isBlank()) {
-            throw new IllegalArgumentException("La nueva contraseña es obligatoria");
-        }
 
         AccountEntity account = getCurrentAccount();
+
         if (!passwordEncoder.matches(currentPassword, account.getPassword())) {
             throw new AccessDeniedException("La contraseña actual no es correcta");
         }
 
+        if (newPassword.equals(account.getUsername())) {
+            throw new IllegalArgumentException(
+                    "La nueva contraseña no puede ser igual al DNI"
+            );
+        }
+
+        if (passwordEncoder.matches(newPassword, account.getPassword())) {
+            throw new IllegalArgumentException(
+                    "La nueva contraseña no puede ser igual a la contraseña actual"
+            );
+        }
+
         account.setPassword(passwordEncoder.encode(newPassword));
+
         accountRepository.save(account);
 
         return accountMapper.toResponse(account);

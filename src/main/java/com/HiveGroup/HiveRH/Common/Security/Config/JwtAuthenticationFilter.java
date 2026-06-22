@@ -1,5 +1,7 @@
 package com.HiveGroup.HiveRH.Common.Security.Config;
 
+import com.HiveGroup.HiveRH.Common.Utils.Enums.RolEnum;
+import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -24,12 +27,13 @@ import java.util.NoSuchElementException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain) throws
-            ServletException, IOException {
+                                    @NonNull FilterChain filterChain
+    ) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -56,6 +60,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authToken.setDetails(new
                         WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                // Bloquea al empleado mientras siga usando su DNI como contraseña.
+                if (userDetails instanceof AccountEntity account
+                        && account.getRol() == RolEnum.EMPLOYEE
+                        && isUsingInitialPassword(account)
+                        && !isPasswordChangeRequest(request)) {
+
+                    writePasswordChangeRequiredResponse(response);
+                    return;
+                }
             }
         } catch (JwtException | NoSuchElementException e) {
             writeUnauthorizedResponse(response, request);
@@ -71,6 +85,48 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         response.getWriter().write(String.format("{\"error\": \"Token JWT invalido o expirado\", \"status\": %d, \"path\": \"%s\"}",
                 HttpServletResponse.SC_UNAUTHORIZED,
                 request.getRequestURI()));
+        response.getWriter().flush();
+    }
+
+    //Cambios para poder cambiar la contraseña automaticamente en Employee y Verifica si el empleado todavía utiliza su DNI como contraseña inicial.
+    private boolean isUsingInitialPassword(
+            AccountEntity account
+    ) {
+        return passwordEncoder.matches(
+                account.getUsername(),
+                account.getPassword()
+        );
+    }
+
+    private boolean isPasswordChangeRequest(
+            HttpServletRequest request
+    ) {
+        return "PATCH".equalsIgnoreCase(
+                request.getMethod()
+        ) && "/api/accounts/me/password".equals(
+                request.getServletPath()
+        );
+    }
+
+    private void writePasswordChangeRequiredResponse(
+            HttpServletResponse response
+    ) throws IOException {
+
+        response.setStatus(
+                HttpServletResponse.SC_FORBIDDEN
+        );
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        response.getWriter().write("""
+            {
+              "status": 403,
+              "title": "Cambio de contraseña obligatorio",
+              "detail": "Debe cambiar la contraseña inicial antes de continuar"
+            }
+            """);
+
         response.getWriter().flush();
     }
 }
