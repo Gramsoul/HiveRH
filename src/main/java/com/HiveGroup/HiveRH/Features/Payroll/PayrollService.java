@@ -34,7 +34,7 @@ public class PayrollService {
 
         validateRequest(request);
 
-        EmployeeEntity employee = findEmployeeById(request.getIdEmployee());
+        EmployeeEntity employee = employeeRepository.findByDni(request.getDniEmployee()).orElseThrow(() -> new EntityNotFoundException("Employee not found", "Employee"));
 
         validateEmployeeCanReceivePayroll(employee, request.getPayrollDate());
 
@@ -88,9 +88,9 @@ public class PayrollService {
 
     // Listar liquidaciones de un empleado con filtros opcionales
     @Transactional(readOnly = true)
-    public List<PayrollResponse> findAllByEmployee(Long idEmployee, PayrollFilterDTO filters) {
+    public List<PayrollResponse> findAllByEmployee(String dniEmployee, PayrollFilterDTO filters) {
 
-        EmployeeEntity employee = findEmployeeById(idEmployee);
+        EmployeeEntity employee = employeeRepository.findByDni(dniEmployee).orElseThrow(() -> new EntityNotFoundException("Employee not found", "Employee"));
 
         PayrollFilterDTO activeFilters = filters != null
                 ? filters
@@ -113,7 +113,7 @@ public class PayrollService {
 
         PayrollEntity payroll = findPayrollById(id);
 
-        EmployeeEntity employee = findEmployeeById(request.getIdEmployee());
+        EmployeeEntity employee = employeeRepository.findByDni(request.getDniEmployee()).orElseThrow(() -> new EntityNotFoundException("Employee not found", "Employee"));
 
         validateEmployeeCanReceivePayroll(employee, request.getPayrollDate());
 
@@ -165,7 +165,7 @@ public class PayrollService {
     // Validar datos obligatorios
     private void validateRequest(PayrollRequest request) {
 
-        if (request.getIdEmployee() == null) {
+        if (request.getDniEmployee() == null) {
             throw new IllegalArgumentException("El empleado es obligatorio");
         }
 
@@ -175,14 +175,14 @@ public class PayrollService {
     }
 
     // Buscar empleado
-    private EmployeeEntity findEmployeeById(Long idEmployee) {
-
-        return employeeRepository.findById(idEmployee)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Empleado no encontrado",
-                        "Employee"
-                ));
-    }
+//    private EmployeeEntity findEmployeeById(Long idEmployee) {
+//
+//        return employeeRepository.findById(idEmployee)
+//                .orElseThrow(() -> new EntityNotFoundException(
+//                        "Empleado no encontrado",
+//                        "Employee"
+//                ));
+//    }
 
     // Validar si el empleado puede recibir liquidación
     private void validateEmployeeCanReceivePayroll(EmployeeEntity employee, LocalDate payrollDate) {
