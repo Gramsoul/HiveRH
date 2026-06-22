@@ -33,7 +33,7 @@ public class VacationController {
     }
 
     @PostMapping
-    @PreAuthorize("@securityAuthorizationService.canCreateVacationForEmployee(#request.idEmployee())")
+    @PreAuthorize("@securityAuthorizationService.canCreateVacationForEmployee(#request.dniEmployee())")
     @Operation(summary = "Registrar vacaciones", description = "Registra vacaciones para un empleado activo. Valida fechas y evita superposiciones para el mismo empleado.")
     public ResponseEntity<VacationResponse> create(@P("request") @Valid @RequestBody VacationRequest request) {
 
