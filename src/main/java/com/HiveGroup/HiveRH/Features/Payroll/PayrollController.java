@@ -26,12 +26,6 @@ public class PayrollController {
 
     private final PayrollService payrollService;
 
-//    @GetMapping
-//    @PreAuthorize("hasAnyRole('ADMIN', 'RRHH')")
-//    public ResponseEntity<List<PayrollResponse>> getAllPayrolls() {
-//        return ResponseEntity.ok(payrollService.findAll());
-//    }
-
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'RRHH')")
     @Operation(summary = "Listar liquidaciones", description = "Lista liquidaciones de sueldo. Requiere rol ADMIN o RRHH.")
@@ -43,10 +37,10 @@ public class PayrollController {
     @PreAuthorize("@securityAuthorizationService.canAccessEmployee(#idEmployee)")
     @Operation(summary = "Listar liquidaciones por empleado", description = "Consulta liquidaciones de un empleado con filtros de fecha. Un empleado solo puede acceder a sus propias liquidaciones.")
     public ResponseEntity<List<PayrollResponse>> getPayrollsByEmployee(
-            @P("idEmployee") @PathVariable("id_employee") Long idEmployee,
+            @P("idEmployee") @PathVariable("id_employee") String dniEmployee,
             PayrollFilterDTO filters
     ) {
-        return ResponseEntity.ok(payrollService.findAllByEmployee(idEmployee, filters));
+        return ResponseEntity.ok(payrollService.findAllByEmployee(dniEmployee, filters));
     }
 
     @PostMapping

@@ -102,6 +102,6 @@ public record EmployeeUpdateDTO(
         @Positive(
                 message = "El ID de la sucursal debe ser mayor que cero"
         )
-        Long id_branch
+Long id_branch
 ) {
 }

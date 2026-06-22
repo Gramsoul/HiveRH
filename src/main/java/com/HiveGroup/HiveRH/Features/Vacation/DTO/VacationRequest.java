@@ -1,8 +1,6 @@
 package com.HiveGroup.HiveRH.Features.Vacation.DTO;
 
-import jakarta.validation.constraints.FutureOrPresent;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
 
@@ -25,7 +23,11 @@ public record VacationRequest(
         @NotNull(message = "Debe indicar si las vacaciones son pagas")
         Boolean paid,
 
-        @NotNull(message = "El empleado es obligatorio")
-        Long idEmployee
+        @NotBlank(message = "El DNI es obligatorio")
+        @Pattern(
+                regexp = "^\\d{7,8}$",
+                message = "El DNI debe contener 7 u 8 números, sin puntos, letras ni espacios"
+        )
+        String dniEmployee
 ) {
 }
