@@ -15,6 +15,7 @@ public class Certificate {
     @Column(name = "description")
     private String description;
 
+
     @ManyToOne
     @JoinColumn(name = "id_license", nullable = false)
     private LicenseEntity license;
