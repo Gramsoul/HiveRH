@@ -3,7 +3,7 @@ package com.HiveGroup.HiveRH.Features.Certificate;
 
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.FileProcessingException;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
-import com.HiveGroup.HiveRH.Common.Utils.Services.PdfLectorService;
+import com.HiveGroup.HiveRH.Common.Utils.Services.FileLectorService;
 import com.HiveGroup.HiveRH.Features.Certificate.DTO.CertificateDTO;
 import com.HiveGroup.HiveRH.Features.Certificate.DTO.ResponseCertificateDTO;
 import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
@@ -22,7 +22,7 @@ import java.util.List;
 @Service
 public class CertificateService {
     CertificateRepository certificateRepository;
-    PdfLectorService pdfLectorService;
+    FileLectorService pdfLectorService;
     LicenseRepository licenseRepository;
     @Autowired
     CertificateMapper certificateMapper;
@@ -71,7 +71,7 @@ public class CertificateService {
     @Transactional
     public CertificateDTO createCertificate(Long idLicense, String description, MultipartFile file) {
         try {
-            byte[] pdf = pdfLectorService.savePDF(file);
+            byte[] pdf = pdfLectorService.saveFile(file);
             LicenseEntity license = licenseRepository.findById(idLicense)
                     .orElseThrow(() -> new EntityNotFoundException("Licencia no encontrada","License"));
 
