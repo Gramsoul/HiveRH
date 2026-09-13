@@ -1,7 +1,7 @@
 package com.HiveGroup.HiveRH.Features.Employee.DTO;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.GenreEnum;
-import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
+import com.HiveGroup.HiveRH.Common.Utils.Enums.EmployeeStatus;
 import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -20,9 +20,7 @@ public record EmployeeResponseDTO(
          LocalDate hireDate,
          LocalDate terminationDate,
          double baseSalary,
-         StatusEnum status,
-         @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-         Long branch_id,
+         EmployeeStatus status,
          @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
          Long account_id,
          List<EmployeeAssignmentDTO> assignments

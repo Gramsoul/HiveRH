@@ -1,6 +1,6 @@
 package com.HiveGroup.HiveRH.Features.Branch;
 
-import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
+import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -31,5 +31,5 @@ public class BranchEntity {
     private boolean isActive;
 
     @OneToMany(mappedBy = "branch")
-    private List<EmployeeEntity> employees;
+    private List<EmployeeAssignmentEntity> assignments;
 }

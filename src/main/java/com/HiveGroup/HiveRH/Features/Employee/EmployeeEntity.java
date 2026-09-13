@@ -1,19 +1,17 @@
 package com.HiveGroup.HiveRH.Features.Employee;
 
-import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
+import com.HiveGroup.HiveRH.Common.Utils.Enums.EmployeeStatus;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.GenreEnum;
 import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
-import com.HiveGroup.HiveRH.Features.Branch.BranchEntity;
-import com.HiveGroup.HiveRH.Features.Complaint.ComplaintEntity;
 import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity;
 import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
 import com.HiveGroup.HiveRH.Features.Payroll.PayrollEntity;
-import com.HiveGroup.HiveRH.Features.Suspension.SuspensionEntity;
 import com.HiveGroup.HiveRH.Features.Vacation.VacationEntity;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.HiveGroup.HiveRH.Features.WorkRequest.WorkRequestEntity;
+import com.HiveGroup.HiveRH.Features.WorkSchedule.WorkScheduleEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,7 +31,7 @@ public class EmployeeEntity {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(name = "lastname", nullable = false, length = 100)
+    @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
 
     @Column(name = "phone", nullable = false, length = 100)
@@ -64,11 +62,10 @@ public class EmployeeEntity {
     private Double baseSalary;
 
     @Enumerated(EnumType.STRING)
-    private StatusEnum status = StatusEnum.ACTIVE;
+    private EmployeeStatus status = EmployeeStatus.ACTIVE;
 
-    @ManyToOne
-    @JoinColumn(name = "id_branch", nullable = false)
-    private BranchEntity branch;
+    @Column(name = "profile_picture", columnDefinition = "LONGBLOB")
+    private byte[] profilePicture;
 
     @OneToOne(optional = true)
     @JoinColumn(name = "id_account", nullable = true)
@@ -87,8 +84,8 @@ public class EmployeeEntity {
     private List<VacationEntity> vacations = null;
 
     @OneToMany(mappedBy = "employee")
-    private List<SuspensionEntity> suspensions = null;
+    private List<WorkScheduleEntity> workSchedules = null;
 
     @OneToMany(mappedBy = "employee")
-    private List<ComplaintEntity> complaints = null;
+    private List<WorkRequestEntity> workRequests = null;
 }

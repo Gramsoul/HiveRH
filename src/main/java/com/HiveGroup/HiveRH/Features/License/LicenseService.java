@@ -1,128 +1,85 @@
 package com.HiveGroup.HiveRH.Features.License;
 
+import com.HiveGroup.HiveRH.Common.Utils.DTOs.PageResponseDTO;
+import com.HiveGroup.HiveRH.Common.Utils.Enums.AbsenceStatus;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Common.Security.Config.SecurityAuthorizationService;
+import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
+import com.HiveGroup.HiveRH.Features.Account.AccountRepository;
 import com.HiveGroup.HiveRH.Features.Certificate.CertificateService;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
-import com.HiveGroup.HiveRH.Features.Employee.EmployeeRepository;
-import com.HiveGroup.HiveRH.Features.License.DTO.LicenseFilterDTO;
 import com.HiveGroup.HiveRH.Features.License.DTO.LicenseDTO;
+import com.HiveGroup.HiveRH.Features.License.DTO.LicenseFilterDTO;
+import com.HiveGroup.HiveRH.Features.License.DTO.LicenseReviewRequestDTO;
 import com.HiveGroup.HiveRH.Features.License.DTO.RequestLicenseDTO;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @AllArgsConstructor
 @Service
 public class LicenseService {
-    public LicenseRepository licenseRepository;
-    public EmployeeRepository employeeRepository;
-    public CertificateService certificateService;
-    public SecurityAuthorizationService securityAuthorizationService;
-    @Autowired
-    public LicenseMapper licenseMapper;
+    private final LicenseRepository licenseRepository;
+    private final AccountRepository accountRepository;
+    private final CertificateService certificateService;
+    private final SecurityAuthorizationService securityAuthorizationService;
 
-
-    public LicenseDTO getDTO(LicenseEntity licence) {
-        //return licenseMapper.toDTO(licence);
-        return LicenseDTO.builder()
-                .id(licence.getId_license())
-                .startDate(licence.getStartDate())
-                .motive(licence.getMotive())
-                .endDate(licence.getEndDate())
-                .idEmployee(licence.getEmployee().getId_employee())
-                .description(licence.getDescription())
-                .build();
-    }
-
-    public LicenseEntity getEntity(LicenseDTO license) {
-        return licenseMapper.toEntity(license);
-    }
-
-    public List<LicenseDTO> getAllLicenseDTO(LicenseFilterDTO filters) {
+    public PageResponseDTO<LicenseDTO> getAllLicensePage(LicenseFilterDTO filters, Pageable pageable) {
         LicenseFilterDTO activeFilters = filters != null
                 ? filters
-                : new LicenseFilterDTO(null, null, null, null);
+                : new LicenseFilterDTO(null, null, null, null, null);
 
-        return licenseRepository.findAll().stream()
-                .filter(license -> activeFilters.idEmployee() == null
-                        || license.getEmployee().getId_employee().equals(activeFilters.idEmployee()))
-                .filter(license -> activeFilters.isAccepted() == null
-                        || license.isAccepted() == activeFilters.isAccepted())
+        validateFilterDateRange(activeFilters);
+
+        List<LicenseDTO> filteredLicenses = licenseRepository.findAll().stream()
+                .filter(license -> filterByStatus(license, activeFilters.status()))
+                .filter(license -> filterByEmployeeDni(license, activeFilters.dniEmployee()))
                 .filter(license -> matchesDateRange(license, activeFilters))
+                .filter(license -> filterByPaid(license, activeFilters.isPaid()))
                 .map(this::toFullDTO)
                 .toList();
+
+        return toPageResponse(filteredLicenses, pageable);
     }
 
     @Transactional
-    public LicenseDTO patchLicense(LicenseDTO licenseDTO) {
-        LicenseEntity ori = licenseRepository.findById(licenseDTO.getId()).orElseThrow(() -> new EntityNotFoundException("Licencia no entrada","License"));
+    public LicenseDTO reviewLicense(Long id, LicenseReviewRequestDTO request) {
+        LicenseEntity license = findLicenseById(id);
 
-        if (licenseDTO.getIdEmployee() != null) {
-            EmployeeEntity employee = employeeRepository
-                    .findById(licenseDTO.getIdEmployee())
-                    .orElseThrow(() -> new EntityNotFoundException("Employee not found", "Employee"));
+        validateReviewRequest(request);
 
-            ori.setEmployee(employee);
-        }
-        if (licenseDTO.getIdCertificates() != null) {
-            ori.setCertificates(certificateService
-                    .getCertificates(licenseDTO.getIdCertificates()));
-        }
-        if (licenseDTO.getRequestDate() != null) ori.setRequestDate(licenseDTO.getRequestDate());
-        if (licenseDTO.getIsAccepted()  != null) ori.setAccepted(licenseDTO.getIsAccepted());
-        if (licenseDTO.getStartDate()   != null) ori.setStartDate(licenseDTO.getStartDate());
-        if (licenseDTO.getEndDate()     != null) ori.setEndDate(licenseDTO.getEndDate());
-        if (licenseDTO.getIsPaid()      != null) ori.setPaid(licenseDTO.getIsPaid());
-        if (licenseDTO.getMotive()      != null) ori.setMotive(licenseDTO.getMotive());
-        if (licenseDTO.getDescription() != null) ori.setDescription(licenseDTO.getDescription());
+        license.setStatus(request.status());
+        license.setPaid(request.isPaid());
+        license.setReviewComment(request.reviewComment());
+        license.setReviewedBy(request.status() == AbsenceStatus.PENDING ? null : getCurrentAccount());
 
-        licenseRepository.save(ori);
-
-        return LicenseDTO.builder()
-                .id(licenseDTO.getId())
-                .requestDate(ori.getRequestDate())
-                .isAccepted(ori.isAccepted())
-                .startDate(ori.getStartDate())
-                .endDate(ori.getEndDate())
-                .isPaid(ori.isPaid())
-                .motive(ori.getMotive())
-                .description(ori.getDescription())
-                .idCertificates(certificateService.getCertificateID(ori.getCertificates()))
-                .idEmployee(ori.getEmployee().getId_employee())
-                .build();
+        return toFullDTO(licenseRepository.save(license));
     }
 
     @Transactional
     public LicenseDTO createLicense(RequestLicenseDTO license){
-        if (license.idEmployee() == null) {
-            throw new IllegalArgumentException("El empleado es obligatorio");
-        }
-        if (license.startDate() == null || license.endDate() == null) {
-            throw new IllegalArgumentException("Las fechas de licencia son obligatorias");
-        }
-        if (license.endDate().isBefore(license.startDate())) {
-            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio");
-        }
+        validateCreateRequest(license);
 
-        EmployeeEntity e = employeeRepository.findById(license.idEmployee()).orElseThrow(() -> new EntityNotFoundException("Empleado no entrada","Employee"));
+        EmployeeEntity employee = getCurrentEmployee();
         LicenseEntity licenseEntity = LicenseEntity.builder()
-                .employee(e)
-                .requestDate(license.requestDate() != null ? license.requestDate() : LocalDate.now())
-                .isAccepted(Boolean.TRUE.equals(license.isAccepted()))
+                .employee(employee)
                 .startDate(license.startDate())
                 .endDate(license.endDate())
-                .isPaid(Boolean.TRUE.equals(license.isPaid()))
                 .motive(license.motive())
-                .description(license.description())
                 .build();
+
         if (license.idCertificates() != null) {
             licenseEntity.setCertificates(certificateService.getCertificates(license.idCertificates()));
         }
+
         return toFullDTO(licenseRepository.save(licenseEntity));
     }
 
@@ -138,20 +95,32 @@ public class LicenseService {
     }
 
     public LicenseDTO getLicense(Long id){
-        LicenseEntity ent = licenseRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Licencia no entrada","License"));
+        return toFullDTO(findLicenseById(id));
+    }
 
-        return LicenseDTO.builder()
-                .id(ent.getId_license())
-                .requestDate(ent.getRequestDate())
-                .isAccepted(ent.isAccepted())
-                .startDate(ent.getStartDate())
-                .endDate(ent.getEndDate())
-                .isPaid(ent.isPaid())
-                .motive(ent.getMotive())
-                .description(ent.getDescription())
-                .idCertificates(certificateService.getCertificateID(ent.getCertificates()))
-                .idEmployee(ent.getEmployee().getId_employee())
-                .build();
+    private LicenseEntity findLicenseById(Long id) {
+        return licenseRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Licencia no encontrada", "License"));
+    }
+
+    private void validateCreateRequest(RequestLicenseDTO license) {
+        if (license.startDate() == null || license.endDate() == null) {
+            throw new IllegalArgumentException("Las fechas de licencia son obligatorias");
+        }
+
+        if (license.endDate().isBefore(license.startDate())) {
+            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio");
+        }
+    }
+
+    private void validateReviewRequest(LicenseReviewRequestDTO request) {
+        if (request.status() == null) {
+            throw new IllegalArgumentException("El estado de la licencia es obligatorio");
+        }
+
+        if (request.isPaid() == null) {
+            throw new IllegalArgumentException("Debe indicar si la licencia es paga");
+        }
     }
 
     private boolean matchesDateRange(LicenseEntity license, LicenseFilterDTO filters) {
@@ -165,18 +134,141 @@ public class LicenseService {
         return startsBeforeFilterEnd && endsAfterFilterStart;
     }
 
+    private void validateFilterDateRange(LicenseFilterDTO filters) {
+        if (filters.startDate() != null
+                && filters.endDate() != null
+                && filters.endDate().isBefore(filters.startDate())) {
+            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio");
+        }
+    }
+
+    private boolean filterByStatus(LicenseEntity license, AbsenceStatus status) {
+        return status == null || license.getStatus() == status;
+    }
+
+    private boolean filterByEmployeeDni(LicenseEntity license, String dniEmployee) {
+        if (dniEmployee == null || dniEmployee.isBlank()) {
+            return true;
+        }
+
+        return license.getEmployee().getDni().equals(dniEmployee);
+    }
+
+    private boolean filterByPaid(LicenseEntity license, Boolean isPaid) {
+        return isPaid == null || license.isPaid() == isPaid;
+    }
+
+    private EmployeeEntity getCurrentEmployee() {
+        AccountEntity account = getCurrentAccount();
+
+        if (account.getEmployee() == null) {
+            throw new EntityNotFoundException("Empleado no encontrado para la cuenta autenticada", "Employee");
+        }
+
+        return account.getEmployee();
+    }
+
+    private AccountEntity getCurrentAccount() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new org.springframework.security.access.AccessDeniedException("No hay usuario autenticado");
+        }
+
+        String username = authentication.getName();
+        AccountEntity account = accountRepository.findByUserOrEmail(username, username)
+                .orElseThrow(() -> new EntityNotFoundException("Cuenta no encontrada", "Account"));
+
+        return account;
+    }
+
+    private PageResponseDTO<LicenseDTO> toPageResponse(List<LicenseDTO> licenses, Pageable pageable) {
+        if (pageable == null || pageable.isUnpaged()) {
+            return new PageResponseDTO<>(
+                    licenses,
+                    0,
+                    licenses.size(),
+                    licenses.size(),
+                    licenses.isEmpty() ? 0 : 1
+            );
+        }
+
+        List<LicenseDTO> sortedLicenses = applySort(licenses, pageable.getSort());
+        int page = pageable.getPageNumber();
+        int size = pageable.getPageSize();
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + size, sortedLicenses.size());
+        List<LicenseDTO> content = start >= sortedLicenses.size()
+                ? List.of()
+                : sortedLicenses.subList(start, end);
+
+        int totalPages = (int) Math.ceil((double) sortedLicenses.size() / size);
+
+        return new PageResponseDTO<>(
+                content,
+                page,
+                size,
+                sortedLicenses.size(),
+                totalPages
+        );
+    }
+
+    private List<LicenseDTO> applySort(List<LicenseDTO> licenses, Sort sort) {
+        if (sort == null || sort.isUnsorted()) {
+            return licenses;
+        }
+
+        List<LicenseDTO> sortedLicenses = new ArrayList<>(licenses);
+        Comparator<LicenseDTO> comparator = null;
+
+        for (Sort.Order order : sort) {
+            Comparator<LicenseDTO> nextComparator = getLicenseComparator(order.getProperty());
+            if (nextComparator == null) {
+                continue;
+            }
+
+            if (order.isDescending()) {
+                nextComparator = nextComparator.reversed();
+            }
+
+            comparator = comparator == null
+                    ? nextComparator
+                    : comparator.thenComparing(nextComparator);
+        }
+
+        if (comparator != null) {
+            sortedLicenses.sort(comparator);
+        }
+
+        return sortedLicenses;
+    }
+
+    private Comparator<LicenseDTO> getLicenseComparator(String property) {
+        return switch (property) {
+            case "id" -> Comparator.comparing(LicenseDTO::getId, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "requestDate" -> Comparator.comparing(LicenseDTO::getRequestDate, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "status" -> Comparator.comparing(LicenseDTO::getStatus, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "startDate" -> Comparator.comparing(LicenseDTO::getStartDate, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "endDate" -> Comparator.comparing(LicenseDTO::getEndDate, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "isPaid" -> Comparator.comparing(LicenseDTO::getIsPaid, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "motive" -> Comparator.comparing(LicenseDTO::getMotive, Comparator.nullsLast(String::compareToIgnoreCase));
+            case "dniEmployee" -> Comparator.comparing(LicenseDTO::getDniEmployee, Comparator.nullsLast(String::compareToIgnoreCase));
+            default -> null;
+        };
+    }
+
     private LicenseDTO toFullDTO(LicenseEntity license) {
         return LicenseDTO.builder()
                 .id(license.getId_license())
                 .requestDate(license.getRequestDate())
-                .isAccepted(license.isAccepted())
+                .status(license.getStatus())
                 .startDate(license.getStartDate())
                 .endDate(license.getEndDate())
                 .isPaid(license.isPaid())
                 .motive(license.getMotive())
-                .description(license.getDescription())
+                .reviewedByAccountId(license.getReviewedBy() != null ? license.getReviewedBy().getId_account() : null)
+                .reviewComment(license.getReviewComment())
                 .idCertificates(certificateService.getCertificateID(license.getCertificates()))
-                .idEmployee(license.getEmployee().getId_employee())
+                .dniEmployee(license.getEmployee().getDni())
                 .build();
     }
 

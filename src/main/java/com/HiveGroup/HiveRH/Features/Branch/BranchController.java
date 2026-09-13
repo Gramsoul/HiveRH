@@ -23,26 +23,26 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/branch")
+@RequestMapping("/api/branches")
 @AllArgsConstructor
-@Tag(name = "Branches", description = "Administracion de sucursales de la empresa.")
+@Tag(name = "03 Branches", description = "Company branch management.")
 public class BranchController {
     private final BranchService branchService;
 
     @GetMapping
-    @Operation(summary = "Listar sucursales", description = "Obtiene las sucursales activas registradas en la empresa.")
+    @Operation(summary = "List branches", description = "Returns the active branches registered in the company.")
     public ResponseEntity<List<BranchResponseDTO>> getBranches() {
         return ResponseEntity.ok(branchService.findAll());
     }
 
     @PostMapping
-    @Operation(summary = "Crear sucursal", description = "Registra una nueva sucursal con nombre, ciudad y direccion.")
+    @Operation(summary = "Create branch", description = "Registers a new branch with name, city, and address.")
     public ResponseEntity<BranchResponseDTO> createBranch(@Valid @RequestBody BranchCreateDTO branchCreateDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(branchService.create(branchCreateDTO));
     }
 
     @PutMapping("/{id_branch}")
-    @Operation(summary = "Actualizar sucursal", description = "Modifica los datos de una sucursal existente.")
+    @Operation(summary = "Update branch", description = "Updates the data of an existing branch.")
     public ResponseEntity<BranchResponseDTO> updateBranch(
             @PathVariable("id_branch") @Positive(message = "El ID de la sucursal debe ser mayor que cero") Long idBranch,
             @Valid @RequestBody BranchUpdateDTO branchUpdateDTO) {
@@ -50,7 +50,7 @@ public class BranchController {
     }
 
     @DeleteMapping("/{id_branch}")
-    @Operation(summary = "Dar de baja sucursal", description = "Realiza una baja logica de la sucursal, marcandola como inactiva sin eliminarla fisicamente.")
+    @Operation(summary = "Deactivate branch", description = "Soft-deletes the branch by marking it as inactive without physically deleting it.")
     public ResponseEntity<BranchResponseDTO> deleteBranch(
             @NonNull @PathVariable("id_branch") @Positive(message = "El ID de la sucursal debe ser mayor que cero") Long idBranch) {
         return ResponseEntity.ok(branchService.deleteById(idBranch));

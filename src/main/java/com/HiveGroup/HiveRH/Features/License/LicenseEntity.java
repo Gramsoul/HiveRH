@@ -1,9 +1,9 @@
 package com.HiveGroup.HiveRH.Features.License;
 
+import com.HiveGroup.HiveRH.Common.Utils.Enums.AbsenceStatus;
+import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
 import com.HiveGroup.HiveRH.Features.Certificate.CertificateEntity;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,8 +25,9 @@ public class LicenseEntity {
     @Column(name = "request_date", nullable = false)
     private LocalDate requestDate;
 
-    @Column(name = "accepted")
-    private boolean isAccepted;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private AbsenceStatus status;
 
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
@@ -40,15 +41,30 @@ public class LicenseEntity {
     @Column(name = "motive", length = 300)
     private String motive;
 
-    @Column(name = "description", length = 200)
-    private String description;
-
     @OneToMany(mappedBy = "license", cascade = CascadeType.ALL)
     //@JsonManagedReference
     private List<CertificateEntity> certificates;
 
     @ManyToOne
+    @JoinColumn(name = "reviewed_by_account_id")
+    private AccountEntity reviewedBy;
+
+    @Column(name = "review_comment", length = 500)
+    private String reviewComment;
+
+    @ManyToOne
     @JoinColumn(name = "id_employee", nullable = false)
     //@JsonBackReference
     private EmployeeEntity employee;
+
+    @PrePersist
+    private void prePersist() {
+        if (requestDate == null) {
+            requestDate = LocalDate.now();
+        }
+
+        if (status == null) {
+            status = AbsenceStatus.PENDING;
+        }
+    }
 }

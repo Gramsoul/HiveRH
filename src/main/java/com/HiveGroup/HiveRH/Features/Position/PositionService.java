@@ -37,10 +37,24 @@ public class PositionService {
         return toDTO(positionRepository.save(position));
     }
 
-    public PositionResponseDTO deleteById(Long id) {
+    public PositionResponseDTO updateById(Long id, PositionRequestDTO request) {
         PositionEntity position = findPositionById(id);
 
-        position.setActive(false);
+        validateName(request.name());
+
+        position.setPositionName(request.name());
+
+        return toDTO(positionRepository.save(position));
+    }
+
+    public PositionResponseDTO updateStatus(Long id, Boolean active) {
+        PositionEntity position = findPositionById(id);
+
+        if (active == null) {
+            throw new IllegalArgumentException("El estado activo es obligatorio");
+        }
+
+        position.setActive(active);
 
         return toDTO(positionRepository.save(position));
     }

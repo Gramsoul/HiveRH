@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "certificate")
 @Getter
@@ -24,8 +26,18 @@ public class CertificateEntity {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "upload_date", nullable = false)
+    private LocalDate uploadDate;
+
     @ManyToOne
     @JoinColumn(name = "id_license", nullable = false)
     @JsonBackReference
     private LicenseEntity license;
+
+    @PrePersist
+    private void prePersist() {
+        if (uploadDate == null) {
+            uploadDate = LocalDate.now();
+        }
+    }
 }

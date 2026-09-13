@@ -3,14 +3,13 @@ package com.HiveGroup.HiveRH.Features.Certificate;
 
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.FileProcessingException;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
-import com.HiveGroup.HiveRH.Common.Utils.Services.PdfLectorService;
+import com.HiveGroup.HiveRH.Common.Utils.Services.FileLectorService;
 import com.HiveGroup.HiveRH.Features.Certificate.DTO.CertificateDTO;
 import com.HiveGroup.HiveRH.Features.Certificate.DTO.ResponseCertificateDTO;
 import com.HiveGroup.HiveRH.Features.License.LicenseEntity;
 import com.HiveGroup.HiveRH.Features.License.LicenseRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,23 +21,9 @@ import java.util.List;
 @Service
 public class CertificateService {
     CertificateRepository certificateRepository;
-    PdfLectorService pdfLectorService;
+    FileLectorService pdfLectorService;
     LicenseRepository licenseRepository;
-    @Autowired
     CertificateMapper certificateMapper;
-
-    public CertificateEntity toEntity(CertificateDTO certificate) {
-        return certificateMapper.toEntity(certificate);
-    }
-
-    public CertificateDTO toDTO(CertificateEntity certificate) {
-        return CertificateDTO.builder()
-                .idCertificate(certificate.getId_certificate())
-                .idLicense(certificate.getLicense().getId_license())
-                .file(certificate.getFile())
-                .description(certificate.getDescription())
-                .build();
-    }
 
     @Transactional
     public List<CertificateEntity> getCertificates(List<Long> ids) {
@@ -86,7 +71,7 @@ public class CertificateService {
             license.getCertificates().add(certificate);
             certificateRepository.save(certificate);
 
-            return toDTO(certificate);
+            return certificateMapper.toDTO(certificate);
         } catch (IOException e){
             throw new FileProcessingException("");
         }
@@ -100,10 +85,7 @@ public class CertificateService {
 
     public ResponseCertificateDTO getInfoCertificate(Long id){
         CertificateEntity c = certificateRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Certificado no encontrado","Certificate"));
-        return ResponseCertificateDTO.builder()
-                .description(c.getDescription())
-                .idLicense(c.getLicense().getId_license())
-                .build();
+        return certificateMapper.toResponseDTO(c);
     }
 
     public byte[] loadPDF(Long id){

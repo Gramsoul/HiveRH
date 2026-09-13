@@ -9,9 +9,9 @@ import org.springframework.web.multipart.MultipartFile;
 @Builder
 public record RequestCertificateDTO(
 
-        @NotNull(message = "El ID es obligatorio")
-        @Positive(message = "El ID debe ser mayor que cero")
-        Long id,
+        @NotNull(message = "El ID de la licencia es obligatorio")
+        @Positive(message = "El ID de la licencia debe ser mayor que cero")
+        Long idLicense,
 
         @Size(max = 255, message = "La descripción no puede superar los 255 caracteres")
         String description,

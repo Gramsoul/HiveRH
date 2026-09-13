@@ -129,8 +129,81 @@ Content-Type: {{json}}
   "address": "Ruta QA 789",
   "status": "ACTIVE",
   "base_salary": 1650000,
-  "id_branch": {{branchId}}
+  "id_branch": {{branchId}},
+  "id_position": {{positionId}},
+  "id_department": {{departmentId}}
 }
+
+### Jornada laboral - login como empleado creado
+# @name employeeLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{json}}
+
+{
+  "identifier": "{{employeeDni}}",
+  "password": "{{employeeDni}}"
+}
+
+> {% client.global.set("employeeToken", response.body.token); %}
+
+### Jornada laboral - crear cronograma
+# @name createWorkSchedule
+POST {{baseUrl}}/api/work-schedules
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "dniEmployee": "{{employeeDni}}",
+  "workDate": "2026-08-17",
+  "startTime": "08:00:00",
+  "endTime": "14:00:00",
+  "type": "WORKDAY",
+  "note": "Turno manana QA"
+}
+
+> {% client.global.set("workScheduleId", response.body.idWorkSchedule); %}
+
+### Jornada laboral - consultar mi cronograma
+GET {{baseUrl}}/api/work-schedules/me?from=2026-08-01&to=2026-08-31
+Authorization: Bearer {{employeeToken}}
+
+### Jornada laboral - filtrar cronogramas
+GET {{baseUrl}}/api/work-schedules?departmentId={{departmentId}}&from=2026-08-01&to=2026-08-31
+Authorization: Bearer {{token}}
+
+### Jornada laboral - crear solicitud propia
+# @name createWorkRequest
+POST {{baseUrl}}/api/work-requests/me
+Authorization: Bearer {{employeeToken}}
+Content-Type: {{json}}
+
+{
+  "requestType": "SHIFT_CHANGE",
+  "targetDate": "2026-08-17",
+  "startTime": "14:00:00",
+  "endTime": "20:00:00",
+  "reason": "Cambio de turno por tramite personal",
+  "compensationDescription": "Compensa trabajando por la tarde"
+}
+
+> {% client.global.set("workRequestId", response.body.idWorkRequest); %}
+
+### Jornada laboral - consultar mis solicitudes
+GET {{baseUrl}}/api/work-requests/me?status=PENDING
+Authorization: Bearer {{employeeToken}}
+
+### Jornada laboral - aprobar solicitud
+PATCH {{baseUrl}}/api/work-requests/{{workRequestId}}/approve
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "reviewComment": "Cambio de turno aprobado para la fecha solicitada"
+}
+
+### Jornada laboral - listar solicitudes administrativas
+GET {{baseUrl}}/api/work-requests?dniEmployee={{employeeDni}}&status=APPROVED
+Authorization: Bearer {{token}}
 
 ### 13. Actualizar sucursal
 PUT {{baseUrl}}/api/branch/{{branchId}}
@@ -143,155 +216,152 @@ Content-Type: {{json}}
   "address": "Av. Siempre Viva 123"
 }
 
-### 14. Crear variacion
-# @name createVariation
-POST {{baseUrl}}/api/variations
+### 14. Crear periodo de liquidacion
+# @name createPayrollPeriod
+POST {{baseUrl}}/api/payroll-periods
 Authorization: Bearer {{token}}
 Content-Type: {{json}}
 
 {
-  "title": "Bono productividad",
+  "month": 6,
+  "year": 2026
+}
+
+> {% client.global.set("payrollPeriodId", response.body.idPayrollPeriod); %}
+
+### 15. Crear concepto suma
+# @name createAdditionConcept
+POST {{baseUrl}}/api/payroll-concepts
+Authorization: Bearer {{token}}
+Content-Type: {{json}}
+
+{
+  "name": "Bono productividad",
   "description": "Bono mensual QA",
-  "total": 250000
+  "type": "ADDITION"
 }
 
-> {% client.global.set("variationId", response.body.idVariation); %}
+> {% client.global.set("additionConceptId", response.body.idPayrollConcept); %}
 
-### 15. Obtener variacion
-GET {{baseUrl}}/api/variations/{{variationId}}
-Authorization: Bearer {{token}}
-
-### 16. Filtrar variaciones
-GET {{baseUrl}}/api/variations?title=Bono&minTotal=100000&maxTotal=500000
-Authorization: Bearer {{token}}
-
-### 17. Actualizar variacion
-PATCH {{baseUrl}}/api/variations/{{variationId}}
+### 16. Crear concepto descuento
+# @name createDeductionConcept
+POST {{baseUrl}}/api/payroll-concepts
 Authorization: Bearer {{token}}
 Content-Type: {{json}}
 
 {
-  "title": "Bono productividad QA",
-  "description": "Bono mensual actualizado",
-  "total": 275000
+  "name": "Adelanto",
+  "description": "Descuento por adelanto",
+  "type": "DEDUCTION"
 }
 
-### 18. Crear liquidacion
+> {% client.global.set("deductionConceptId", response.body.idPayrollConcept); %}
+
+### 17. Listar conceptos
+GET {{baseUrl}}/api/payroll-concepts?active=true
+Authorization: Bearer {{token}}
+
+### 18. Crear liquidacion en borrador
 # @name createPayroll
 POST {{baseUrl}}/api/payrolls
 Authorization: Bearer {{token}}
 Content-Type: {{json}}
 
 {
-  "payrollDate": "2026-06-01",
-  "idEmployee": {{employeeId}},
-  "idVariations": [{{variationId}}]
+  "dniEmployee": "{{employeeDni}}",
+  "periodId": {{payrollPeriodId}},
+  "details": [
+    {
+      "payrollConceptId": {{additionConceptId}},
+      "amount": 250000,
+      "description": "Bono mensual QA"
+    },
+    {
+      "payrollConceptId": {{deductionConceptId}},
+      "amount": 50000,
+      "description": "Adelanto descontado"
+    }
+  ]
 }
 
 > {% client.global.set("payrollId", response.body.idPayroll); %}
 
-### 19. Obtener liquidacion
+### 19. Confirmar liquidacion
+PATCH {{baseUrl}}/api/payrolls/{{payrollId}}/confirm
+Authorization: Bearer {{token}}
+
+### 20. Obtener liquidacion
 GET {{baseUrl}}/api/payrolls/{{payrollId}}
 Authorization: Bearer {{token}}
 
-### 20. Listar liquidaciones
-GET {{baseUrl}}/api/payrolls
+### 21. Listar liquidaciones por periodo
+GET {{baseUrl}}/api/payrolls?periodId={{payrollPeriodId}}
 Authorization: Bearer {{token}}
 
-### 21. Crear vacaciones
+### 22. Listar periodos
+GET {{baseUrl}}/api/payroll-periods?year=2026
+Authorization: Bearer {{token}}
+
+### 23. Crear vacaciones
 # @name createVacation
-POST {{baseUrl}}/api/vacation
+POST {{baseUrl}}/api/vacations
 Authorization: Bearer {{token}}
 Content-Type: {{json}}
 
 {
   "requestDate": "2026-06-11",
-  "accepted": true,
   "startDate": "2026-07-01",
   "endDate": "2026-07-10",
-  "paid": true,
-  "idEmployee": {{employeeId}}
+  "dniEmployee": "{{employeeDni}}"
 }
 
 > {% client.global.set("vacationId", response.body.idVacation); %}
 
-### 22. Obtener vacaciones
-GET {{baseUrl}}/api/vacation/{{vacationId}}
+### 22. Listar vacaciones
+GET {{baseUrl}}/api/vacations?dniEmployee={{employeeDni}}
 Authorization: Bearer {{token}}
 
 ### 23. Actualizar vacaciones
-PUT {{baseUrl}}/api/vacation/{{vacationId}}
+PUT {{baseUrl}}/api/vacations/{{vacationId}}
 Authorization: Bearer {{token}}
 Content-Type: {{json}}
 
 {
   "requestDate": "2026-06-11",
-  "accepted": true,
+  "status": "APPROVED",
   "startDate": "2026-07-05",
   "endDate": "2026-07-15",
-  "paid": true,
-  "idEmployee": {{employeeId}}
+  "reviewComment": "Vacaciones aprobadas",
+  "dniEmployee": "{{employeeDni}}"
 }
 
-### 24. Crear denuncia
-# @name createComplaint
-POST {{baseUrl}}/api/complaint
-Authorization: Bearer {{token}}
-Content-Type: {{json}}
-
-{
-  "title": "Incidente QA",
-  "description": "Se registra un incidente para validar el flujo.",
-  "idEmployee": {{employeeId}}
-}
-
-> {% client.global.set("complaintId", response.body.idComplaint); %}
-
-### 25. Obtener denuncia
-GET {{baseUrl}}/api/complaint/{{complaintId}}
-Authorization: Bearer {{token}}
-
-### 26. Actualizar estado de denuncia
-PUT {{baseUrl}}/api/complaint/{{complaintId}}
-Authorization: Bearer {{token}}
-Content-Type: {{json}}
-
-{
-  "status": "REVIEWED"
-}
-
-### 27. Crear licencia
+### 24. Crear licencia
 # @name createLicense
-POST {{baseUrl}}/api/license
+POST {{baseUrl}}/api/licenses
 Authorization: Bearer {{token}}
 Content-Type: {{json}}
 
 {
-  "requestDate": "2026-06-11",
-  "isAccepted": true,
   "startDate": "2026-06-20",
   "endDate": "2026-06-22",
-  "isPaid": true,
   "motive": "Control medico",
-  "description": "Licencia creada desde HTTP Client",
-  "idCertificates": [],
-  "idEmployee": {{employeeId}}
+  "idCertificates": []
 }
 
 > {% client.global.set("licenseId", response.body.id); %}
 
-### 28. Listar licencias
-GET {{baseUrl}}/api/license
+### 25. Listar licencias
+GET {{baseUrl}}/api/licenses
 Authorization: Bearer {{token}}
 
-### 29. Obtener licencia por id
-GET {{baseUrl}}/api/license/{{licenseId}}
+### 26. Obtener licencia por id
+GET {{baseUrl}}/api/licenses/{{licenseId}}
 Authorization: Bearer {{token}}
 
-### 30. Adjuntar certificado a licencia
+### 27. Adjuntar certificado a licencia
 ### IntelliJ HTTP Client no resuelve variables dentro de `< archivo`, por eso la ruta va literal.
 # @name createCertificate
-POST {{baseUrl}}/api/certificate
+POST {{baseUrl}}/api/certificates
 Authorization: Bearer {{token}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
@@ -312,58 +382,53 @@ Content-Type: application/pdf
 
 > {% client.global.set("certificateId", response.body.idCertificate); %}
 
-### 31. Obtener metadatos de certificado
+### 28. Obtener metadatos de certificado
 GET {{baseUrl}}/api/certificate-info?id={{certificateId}}
 Authorization: Bearer {{token}}
 
-### 32. Descargar certificado
+### 29. Descargar certificado
 GET {{baseUrl}}/api/certificate/{{certificateId}}
 Authorization: Bearer {{token}}
 
-### 33. Asociar certificados a licencia por patch
-PATCH {{baseUrl}}/api/license
+### 30. Revisar licencia
+PATCH {{baseUrl}}/api/licenses/{{licenseId}}
 Authorization: Bearer {{token}}
 Content-Type: {{json}}
 
 {
-  "id": {{licenseId}},
-  "idEmployee": {{employeeId}},
-  "idCertificates": [{{certificateId}}],
-  "description": "Licencia actualizada con certificado"
+  "status": "APPROVED",
+  "isPaid": true,
+  "reviewComment": "Licencia aprobada con certificado"
 }
 
-### 34. Listar suspensiones
-GET {{baseUrl}}/api/suspension?id_employee={{employeeId}}
+### 31. Limpieza opcional: anular liquidacion
+PATCH {{baseUrl}}/api/payrolls/{{payrollId}}/cancel
 Authorization: Bearer {{token}}
 
-### 35. Limpieza opcional: borrar liquidacion
-DELETE {{baseUrl}}/api/payrolls/{{payrollId}}
+### 32. Limpieza opcional: cerrar periodo
+PATCH {{baseUrl}}/api/payroll-periods/{{payrollPeriodId}}/close
 Authorization: Bearer {{token}}
 
-### 36. Limpieza opcional: borrar variacion
-DELETE {{baseUrl}}/api/variations/{{variationId}}
+### 33. Limpieza opcional: borrar vacaciones
+DELETE {{baseUrl}}/api/vacations/{{vacationId}}
 Authorization: Bearer {{token}}
 
-### 37. Limpieza opcional: borrar vacaciones
-DELETE {{baseUrl}}/api/vacation/{{vacationId}}
-Authorization: Bearer {{token}}
-
-### 38. Limpieza opcional: borrar certificado
+### 34. Limpieza opcional: borrar certificado
 DELETE {{baseUrl}}/api/certificate/{{certificateId}}
 Authorization: Bearer {{token}}
 
-### 39. Limpieza opcional: borrar empleado
+### 35. Limpieza opcional: borrar empleado
 DELETE {{baseUrl}}/api/employees/{{employeeDni}}
 Authorization: Bearer {{token}}
 
-### 40. Limpieza opcional: borrar puesto
+### 36. Limpieza opcional: borrar puesto
 DELETE {{baseUrl}}/api/position/{{positionId}}
 Authorization: Bearer {{token}}
 
-### 41. Limpieza opcional: borrar sucursal
+### 37. Limpieza opcional: borrar sucursal
 DELETE {{baseUrl}}/api/branch/{{branchId}}
 Authorization: Bearer {{token}}
 
-### 42. Limpieza opcional: borrar departamento
+### 38. Limpieza opcional: borrar departamento
 DELETE {{baseUrl}}/api/department/{{departmentId}}
 Authorization: Bearer {{token}}

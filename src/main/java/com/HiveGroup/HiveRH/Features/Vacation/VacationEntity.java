@@ -1,6 +1,8 @@
 package com.HiveGroup.HiveRH.Features.Vacation;
 
 
+import com.HiveGroup.HiveRH.Common.Utils.Enums.AbsenceStatus;
+import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,8 +24,9 @@ public class VacationEntity {
     @Column (name = "request_date", nullable = false)
     private LocalDate requestDate;
 
-    @Column(name = "accepted")
-    private boolean isAccepted;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private AbsenceStatus status = AbsenceStatus.PENDING;
 
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
@@ -31,10 +34,25 @@ public class VacationEntity {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @Column(name = "paid")
-    private boolean isPaid;
+    @ManyToOne
+    @JoinColumn(name = "reviewed_by_account_id")
+    private AccountEntity reviewedBy;
+
+    @Column(name = "review_comment", length = 500)
+    private String reviewComment;
 
     @ManyToOne
     @JoinColumn(name = "id_employee", nullable = false)
     private EmployeeEntity employee;
+
+    @PrePersist
+    private void prePersist() {
+        if (requestDate == null) {
+            requestDate = LocalDate.now();
+        }
+
+        if (status == null) {
+            status = AbsenceStatus.PENDING;
+        }
+    }
 }

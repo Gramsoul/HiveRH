@@ -34,10 +34,24 @@ public class DepartmentService {
         return toDTO(departamentRepository.save(department));
     }
 
-    public DepartmentResponseDTO deleteById(Long id) {
+    public DepartmentResponseDTO updateById(Long id, DepartmentRequestDTO request) {
         DepartmentEntity department = findDepartmentById(id);
 
-        department.setActive(false);
+        validateName(request.name());
+
+        department.setDepartmentName(request.name());
+
+        return toDTO(departamentRepository.save(department));
+    }
+
+    public DepartmentResponseDTO updateStatus(Long id, Boolean active) {
+        DepartmentEntity department = findDepartmentById(id);
+
+        if (active == null) {
+            throw new IllegalArgumentException("El estado activo es obligatorio");
+        }
+
+        department.setActive(active);
 
         return toDTO(departamentRepository.save(department));
     }

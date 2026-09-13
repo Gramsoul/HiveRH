@@ -36,4 +36,17 @@ springdoc:
     operationsSorter: method
     tagsSorter: alpha
 
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: framework
 
+hiverh:
+  demo-cleanup:
+    enabled: ${DEMO_CLEANUP_ENABLED:false}
+    daily-cron: "${DEMO_CLEANUP_DAILY_CRON:0 0 4 * * *}"
+    zone: ${DEMO_CLEANUP_ZONE:UTC}
+    max-records: ${DEMO_CLEANUP_MAX_RECORDS:5000}
+    threshold-initial-delay-ms: ${DEMO_CLEANUP_THRESHOLD_INITIAL_DELAY_MS:300000}
+    threshold-check-delay-ms: ${DEMO_CLEANUP_THRESHOLD_CHECK_DELAY_MS:900000}
+    include-catalog-data: ${DEMO_CLEANUP_INCLUDE_CATALOG_DATA:false}
+    preserved-account-users: ${DEMO_CLEANUP_PRESERVED_ACCOUNT_USERS:admin}

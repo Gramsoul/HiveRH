@@ -1,6 +1,6 @@
 package com.HiveGroup.HiveRH.Common.Security.Auth;
 
-import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
+import com.HiveGroup.HiveRH.Common.Utils.Enums.AccountStatus;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
 import com.HiveGroup.HiveRH.Features.Account.AccountRepository;
@@ -28,7 +28,7 @@ public class AuthService {
         );
         AccountEntity account = accountRepository.findByUserOrEmail(input.identifier(), input.identifier()).orElseThrow(
                 () -> new EntityNotFoundException("Usuario o email no encontrado", "Account"));
-        if (account.getStatusEnum() != StatusEnum.ACTIVE) {
+        if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new DisabledException("Cuenta deshabilitada");
         }
         return account;

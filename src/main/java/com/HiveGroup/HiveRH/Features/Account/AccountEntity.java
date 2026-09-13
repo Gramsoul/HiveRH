@@ -1,8 +1,7 @@
 package com.HiveGroup.HiveRH.Features.Account;
 
-import com.HiveGroup.HiveRH.Common.Utils.Enums.GenreEnum;
+import com.HiveGroup.HiveRH.Common.Utils.Enums.AccountStatus;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.RolEnum;
-import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -38,7 +37,8 @@ public class AccountEntity implements UserDetails {
     private RolEnum rol;
 
     @Enumerated(EnumType.STRING)
-    private StatusEnum statusEnum;
+    @Column(name = "status", nullable = false)
+    private AccountStatus status = AccountStatus.ACTIVE;
 
     @OneToOne(mappedBy = "account")
     private EmployeeEntity employee;
@@ -72,6 +72,13 @@ public class AccountEntity implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return statusEnum == StatusEnum.ACTIVE;
+        return status == AccountStatus.ACTIVE;
+    }
+
+    @PrePersist
+    private void prePersist() {
+        if (status == null) {
+            status = AccountStatus.ACTIVE;
+        }
     }
 }

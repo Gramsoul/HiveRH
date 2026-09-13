@@ -1,9 +1,12 @@
 package com.HiveGroup.HiveRH.Features.Payroll.DTO;
 
-import java.time.LocalDate;
+import com.HiveGroup.HiveRH.Common.Utils.Enums.PayrollStatus;
 
 public record PayrollFilterDTO(
-        LocalDate startDate,
-        LocalDate endDate
+        Long periodId,
+        Integer month,
+        Integer year,
+        PayrollStatus status,
+        String dniEmployee
 ) {
 }

@@ -13,6 +13,7 @@ public interface PositionRepository extends JpaRepository<@NonNull PositionEntit
             FROM PositionEntity p
             JOIN p.assignments assignment
             WHERE assignment.department.id_department = :idDepartment
+            AND assignment.active = true
             """)
     List<PositionEntity> findDistinctByDepartmentId(@Param("idDepartment") Long idDepartment);
 }

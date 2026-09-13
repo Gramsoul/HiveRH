@@ -1,0 +1,2600 @@
+{
+  "info": {
+    "_postman_id": "b2ed1996-84c7-4328-bc1e-256570f3492b",
+    "name": "HIVEGROUP",
+    "description": "Colección completa de la API HiveRH generada desde docs/Postman_Endpoints.md. La colección usa {{adminToken}} por defecto; las rutas /me orientadas a empleados usan {{employeeToken}}. Los query params opcionales quedan desactivados hasta que se necesiten.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "24230940"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{adminToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "01 Auth",
+      "description": "Autenticación y registro de cuentas.",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Login exitoso\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "    const data = pm.response.json();",
+                  "    pm.test(\"La respuesta contiene un token\", function () {",
+                  "        pm.expect(data.token).to.be.a(\"string\").and.not.empty;",
+                  "    });",
+                  "",
+                  "    if (data.token) {",
+                  "        const variableName = pm.collectionVariables.get(\"loginTokenVariable\") || \"adminToken\";",
+                  "        pm.collectionVariables.set(variableName, data.token);",
+                  "        console.log(`Token guardado en la variable de colección: ${variableName}`);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"admin\",\n  \"password\": \"123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "No requiere token. Guarda automáticamente el JWT de la respuesta en la variable indicada por {{loginTokenVariable}} (adminToken por defecto)."
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar cuenta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": \"staff.demo\",\n  \"email\": \"staff.demo@hiverh.local\",\n  \"password\": \"Staff123\",\n  \"rol\": \"STAFF\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Requiere ADMIN."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 Accounts",
+      "description": "Administración y autogestión de cuentas.",
+      "item": [
+        {
+          "name": "Listar cuentas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar rol de cuenta",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rol\": \"EMPLOYEE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/{{accountIdentifier}}/rol",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "{{accountIdentifier}}",
+                "rol"
+              ]
+            },
+            "description": "Requiere ADMIN. STAFF puede asignar roles distintos de ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar mi email",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nuevo.email@hiverh.local\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/me/email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "me",
+                "email"
+              ]
+            },
+            "description": "Acepta cualquier token válido."
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar mi password",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"123\",\n  \"newPassword\": \"Nueva123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "me",
+                "password"
+              ]
+            },
+            "description": "Acepta cualquier token válido."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 Branches",
+      "description": "Gestión de sucursales.",
+      "item": [
+        {
+          "name": "Listar sucursales activas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/branches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "branches"
+              ]
+            },
+            "description": "Acepta cualquier token válido."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear sucursal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Casa Central\",\n  \"city\": \"Cordoba\",\n  \"address\": \"Av. Colon 123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/branches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "branches"
+              ]
+            },
+            "description": "Requiere ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar sucursal",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Casa Central\",\n  \"city\": \"Cordoba Capital\",\n  \"address\": \"Av. Colon 123\",\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/branches/{{branchId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "branches",
+                "{{branchId}}"
+              ]
+            },
+            "description": "Requiere ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Desactivar sucursal",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/branches/{{branchId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "branches",
+                "{{branchId}}"
+              ]
+            },
+            "description": "Requiere ADMIN."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 Departments",
+      "description": "Gestión de departamentos.",
+      "item": [
+        {
+          "name": "Listar departamentos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/departments?id_department={{departmentId}}&name=Recursos&active=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "departments"
+              ],
+              "query": [
+                {
+                  "key": "id_department",
+                  "value": "{{departmentId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "name",
+                  "value": "Recursos",
+                  "disabled": true
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Acepta cualquier token válido. Los filtros están desactivados inicialmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear departamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Recursos Humanos\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/departments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "departments"
+              ]
+            },
+            "description": "Requiere ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar departamento",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Talento Humano\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/departments/{{departmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "departments",
+                "{{departmentId}}"
+              ]
+            },
+            "description": "Requiere ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado de departamento",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/departments/{{departmentId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "departments",
+                "{{departmentId}}",
+                "status"
+              ]
+            },
+            "description": "Requiere ADMIN."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 Positions",
+      "description": "Gestión de puestos.",
+      "item": [
+        {
+          "name": "Listar puestos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/positions?id_department={{departmentId}}&name=Analista&active=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "positions"
+              ],
+              "query": [
+                {
+                  "key": "id_department",
+                  "value": "{{departmentId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "name",
+                  "value": "Analista",
+                  "disabled": true
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Acepta cualquier token válido. Los filtros están desactivados inicialmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear puesto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Analista de RRHH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/positions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "positions"
+              ]
+            },
+            "description": "Requiere ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar puesto",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Analista Senior de RRHH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/positions/{{positionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "positions",
+                "{{positionId}}"
+              ]
+            },
+            "description": "Requiere ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado de puesto",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/positions/{{positionId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "positions",
+                "{{positionId}}",
+                "status"
+              ]
+            },
+            "description": "Requiere ADMIN."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 Employees",
+      "description": "Consulta y administración de empleados.",
+      "item": [
+        {
+          "name": "Obtener mi perfil",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/employees/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "me"
+              ]
+            },
+            "description": "Requiere una cuenta EMPLOYEE vinculada a un empleado."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener empleado por DNI",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees/{{employeeDni}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "{{employeeDni}}"
+              ]
+            },
+            "description": "Requiere ADMIN/STAFF o el EMPLOYEE dueño del DNI."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar empleados",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees?fullName=Ada&dni={{employeeDni}}&id_branch={{branchId}}&hire_date=2026-01-10&termination_date=2026-12-31&status=ACTIVE&position=Analista&department=Recursos Humanos&min_salary=800000&max_salary=2000000&page=0&size=20&sort=hireDate,desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees"
+              ],
+              "query": [
+                {
+                  "key": "fullName",
+                  "value": "Ada",
+                  "disabled": true
+                },
+                {
+                  "key": "dni",
+                  "value": "{{employeeDni}}",
+                  "disabled": true
+                },
+                {
+                  "key": "id_branch",
+                  "value": "{{branchId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "hire_date",
+                  "value": "2026-01-10",
+                  "disabled": true
+                },
+                {
+                  "key": "termination_date",
+                  "value": "2026-12-31",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "disabled": true
+                },
+                {
+                  "key": "position",
+                  "value": "Analista",
+                  "disabled": true
+                },
+                {
+                  "key": "department",
+                  "value": "Recursos Humanos",
+                  "disabled": true
+                },
+                {
+                  "key": "min_salary",
+                  "value": "800000",
+                  "disabled": true
+                },
+                {
+                  "key": "max_salary",
+                  "value": "2000000",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "hireDate,desc",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. Todos los filtros y la paginación están desactivados inicialmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear empleado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ada\",\n  \"lastName\": \"Lovelace\",\n  \"phoneNumber\": \"3515550101\",\n  \"genre\": \"FEMALE\",\n  \"dni\": \"{{employeeDni}}\",\n  \"city\": \"Cordoba\",\n  \"address\": \"Bv. Testing 456\",\n  \"birth_date\": \"1995-04-12\",\n  \"hire_date\": \"2026-01-10\",\n  \"base_salary\": 1500000,\n  \"id_branch\": {{branchId}},\n  \"id_position\": {{positionId}},\n  \"id_department\": {{departmentId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/employees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar parcialmente empleado",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ada\",\n  \"lastName\": \"Lovelace\",\n  \"phoneNumber\": \"3515550199\",\n  \"genre\": \"FEMALE\",\n  \"dni\": \"{{employeeDni}}\",\n  \"city\": \"Cordoba\",\n  \"address\": \"Nueva direccion 789\",\n  \"birth_date\": \"1995-04-12\",\n  \"hire_date\": \"2026-01-10\",\n  \"termination_date\": null,\n  \"status\": \"ACTIVE\",\n  \"base_salary\": 1650000,\n  \"id_branch\": {{branchId}},\n  \"id_position\": {{positionId}},\n  \"id_department\": {{departmentId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/employees/{{employeeDni}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "{{employeeDni}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. Puede eliminar del body los campos que no quiera modificar."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar empleado completo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ada\",\n  \"lastName\": \"Lovelace\",\n  \"phoneNumber\": \"3515550101\",\n  \"genre\": \"FEMALE\",\n  \"dni\": \"{{employeeDni}}\",\n  \"city\": \"Cordoba\",\n  \"address\": \"Bv. Testing 456\",\n  \"birth_date\": \"1995-04-12\",\n  \"hire_date\": \"2026-01-10\",\n  \"termination_date\": null,\n  \"status\": \"ACTIVE\",\n  \"base_salary\": 1500000,\n  \"id_branch\": {{branchId}},\n  \"id_position\": {{positionId}},\n  \"id_department\": {{departmentId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/employees/{{employeeDni}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "{{employeeDni}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Dar de baja empleado",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/employees/{{employeeDni}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "employees",
+                "{{employeeDni}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07 Work Schedules",
+      "description": "Cronogramas y turnos de trabajo.",
+      "item": [
+        {
+          "name": "Listar mis cronogramas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/work-schedules/me?from=2026-08-01&to=2026-08-31",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-schedules",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-08-01",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-08-31",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requiere EMPLOYEE. Los filtros de fecha están desactivados inicialmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar cronogramas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/work-schedules?dniEmployee={{employeeDni}}&departmentId={{departmentId}}&branchId={{branchId}}&from=2026-08-01&to=2026-08-31&type=WORKDAY&status=ACTIVE&page=0&size=20&sort=workDate,asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-schedules"
+              ],
+              "query": [
+                {
+                  "key": "dniEmployee",
+                  "value": "{{employeeDni}}",
+                  "disabled": true
+                },
+                {
+                  "key": "departmentId",
+                  "value": "{{departmentId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "branchId",
+                  "value": "{{branchId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "2026-08-01",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-08-31",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "WORKDAY",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "workDate,asc",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. Los filtros y la paginación están desactivados inicialmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener cronograma por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/work-schedules/{{workScheduleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-schedules",
+                "{{workScheduleId}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear cronograma",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dniEmployee\": \"{{employeeDni}}\",\n  \"workDate\": \"2026-08-17\",\n  \"startTime\": \"08:00:00\",\n  \"endTime\": \"14:00:00\",\n  \"type\": \"WORKDAY\",\n  \"note\": \"Turno manana\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/work-schedules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-schedules"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar cronograma",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dniEmployee\": \"{{employeeDni}}\",\n  \"workDate\": \"2026-08-18\",\n  \"startTime\": \"09:00:00\",\n  \"endTime\": \"15:00:00\",\n  \"type\": \"WORKDAY\",\n  \"note\": \"Turno actualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/work-schedules/{{workScheduleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-schedules",
+                "{{workScheduleId}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. Puede eliminar del body los campos que no quiera modificar."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancelar cronograma",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/work-schedules/{{workScheduleId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-schedules",
+                "{{workScheduleId}}",
+                "cancel"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08 Work Requests",
+      "description": "Solicitudes de jornada y su revisión.",
+      "item": [
+        {
+          "name": "Crear mi solicitud",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestType\": \"SHIFT_CHANGE\",\n  \"targetDate\": \"2026-08-17\",\n  \"startTime\": \"14:00:00\",\n  \"endTime\": \"20:00:00\",\n  \"reason\": \"Cambio de turno por tramite personal\",\n  \"compensationDescription\": \"Compensa trabajando por la tarde\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/work-requests/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-requests",
+                "me"
+              ]
+            },
+            "description": "Requiere EMPLOYEE."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar mis solicitudes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/work-requests/me?from=2026-08-01&to=2026-08-31&requestType=SHIFT_CHANGE&status=PENDING",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-requests",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-08-01",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-08-31",
+                  "disabled": true
+                },
+                {
+                  "key": "requestType",
+                  "value": "SHIFT_CHANGE",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requiere EMPLOYEE. Los filtros están desactivados inicialmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener mi solicitud por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/work-requests/me/{{workRequestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-requests",
+                "me",
+                "{{workRequestId}}"
+              ]
+            },
+            "description": "Requiere EMPLOYEE."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancelar mi solicitud",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/work-requests/me/{{workRequestId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-requests",
+                "me",
+                "{{workRequestId}}",
+                "cancel"
+              ]
+            },
+            "description": "Requiere EMPLOYEE y una solicitud propia en estado PENDING."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar solicitudes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/work-requests?dniEmployee={{employeeDni}}&departmentId={{departmentId}}&branchId={{branchId}}&from=2026-08-01&to=2026-08-31&requestType=SHIFT_CHANGE&status=PENDING&page=0&size=20&sort=targetDate,desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-requests"
+              ],
+              "query": [
+                {
+                  "key": "dniEmployee",
+                  "value": "{{employeeDni}}",
+                  "disabled": true
+                },
+                {
+                  "key": "departmentId",
+                  "value": "{{departmentId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "branchId",
+                  "value": "{{branchId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "2026-08-01",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-08-31",
+                  "disabled": true
+                },
+                {
+                  "key": "requestType",
+                  "value": "SHIFT_CHANGE",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "targetDate,desc",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. Los filtros y la paginación están desactivados inicialmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener solicitud por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/work-requests/{{workRequestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-requests",
+                "{{workRequestId}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Aprobar solicitud",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reviewComment\": \"Cambio de turno aprobado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/work-requests/{{workRequestId}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-requests",
+                "{{workRequestId}}",
+                "approve"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. El body completo es opcional; puede quitarlo junto con Content-Type."
+          },
+          "response": []
+        },
+        {
+          "name": "Rechazar solicitud",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reviewComment\": \"No se puede cubrir el turno solicitado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/work-requests/{{workRequestId}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "work-requests",
+                "{{workRequestId}}",
+                "reject"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. El body completo es opcional; puede quitarlo junto con Content-Type."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "09 Payroll Periods",
+      "description": "Períodos de liquidación.",
+      "item": [
+        {
+          "name": "Listar períodos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payroll-periods?month=8&year=2026&status=OPEN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payroll-periods"
+              ],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "8",
+                  "disabled": true
+                },
+                {
+                  "key": "year",
+                  "value": "2026",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "OPEN",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. Los filtros están desactivados inicialmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener período por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payroll-periods/{{payrollPeriodId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payroll-periods",
+                "{{payrollPeriodId}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear período",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"month\": 8,\n  \"year\": 2026\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payroll-periods",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payroll-periods"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Cerrar período",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payroll-periods/{{payrollPeriodId}}/close",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payroll-periods",
+                "{{payrollPeriodId}}",
+                "close"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. No se puede cerrar si tiene liquidaciones DRAFT."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10 Payroll Concepts",
+      "description": "Conceptos de adicionales y deducciones.",
+      "item": [
+        {
+          "name": "Listar conceptos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payroll-concepts?name=Bono&type=ADDITION&active=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payroll-concepts"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Bono",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "ADDITION",
+                  "disabled": true
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. Los filtros están desactivados inicialmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener concepto por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payroll-concepts/{{payrollConceptId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payroll-concepts",
+                "{{payrollConceptId}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear concepto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bono productividad\",\n  \"description\": \"Bono mensual por objetivos\",\n  \"type\": \"ADDITION\",\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payroll-concepts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payroll-concepts"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar concepto",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bono productividad actualizado\",\n  \"description\": \"Bono mensual revisado\",\n  \"type\": \"ADDITION\",\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payroll-concepts/{{payrollConceptId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payroll-concepts",
+                "{{payrollConceptId}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. Puede eliminar del body los campos que no quiera modificar."
+          },
+          "response": []
+        },
+        {
+          "name": "Desactivar concepto",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payroll-concepts/{{payrollConceptId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payroll-concepts",
+                "{{payrollConceptId}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "11 Payrolls",
+      "description": "Liquidaciones de sueldo.",
+      "item": [
+        {
+          "name": "Listar mis liquidaciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payrolls/me?year=2026",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payrolls",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requiere EMPLOYEE. Solo devuelve liquidaciones CONFIRMED; el filtro está desactivado inicialmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener mi liquidación por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payrolls/me/{{payrollId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payrolls",
+                "me",
+                "{{payrollId}}"
+              ]
+            },
+            "description": "Requiere EMPLOYEE. Solo permite liquidaciones propias en estado CONFIRMED."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar liquidaciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payrolls?periodId={{payrollPeriodId}}&month=8&year=2026&status=DRAFT&dniEmployee={{employeeDni}}&page=0&size=20&sort=idPayroll,desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payrolls"
+              ],
+              "query": [
+                {
+                  "key": "periodId",
+                  "value": "{{payrollPeriodId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "month",
+                  "value": "8",
+                  "disabled": true
+                },
+                {
+                  "key": "year",
+                  "value": "2026",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "DRAFT",
+                  "disabled": true
+                },
+                {
+                  "key": "dniEmployee",
+                  "value": "{{employeeDni}}",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "idPayroll,desc",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. Los filtros y la paginación están desactivados inicialmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener liquidación por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payrolls/{{payrollId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payrolls",
+                "{{payrollId}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear liquidación borrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dniEmployee\": \"{{employeeDni}}\",\n  \"periodId\": {{payrollPeriodId}},\n  \"details\": [\n    {\n      \"payrollConceptId\": {{additionConceptId}},\n      \"amount\": 250000,\n      \"description\": \"Bono mensual\"\n    },\n    {\n      \"payrollConceptId\": {{deductionConceptId}},\n      \"amount\": 50000,\n      \"description\": \"Descuento por adelanto\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payrolls",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payrolls"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar liquidación borrador",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dniEmployee\": \"{{employeeDni}}\",\n  \"periodId\": {{payrollPeriodId}},\n  \"details\": [\n    {\n      \"payrollConceptId\": {{additionConceptId}},\n      \"amount\": 300000,\n      \"description\": \"Bono actualizado\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payrolls/{{payrollId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payrolls",
+                "{{payrollId}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. Solo modifica DRAFT; puede eliminar los campos no requeridos."
+          },
+          "response": []
+        },
+        {
+          "name": "Confirmar liquidación",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payrolls/{{payrollId}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payrolls",
+                "{{payrollId}}",
+                "confirm"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancelar liquidación",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payrolls/{{payrollId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payrolls",
+                "{{payrollId}}",
+                "cancel"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "12 Vacations",
+      "description": "Solicitudes y gestión de vacaciones.",
+      "item": [
+        {
+          "name": "Listar vacaciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations?status=PENDING&startDate=2026-07-01&endDate=2026-07-31&dniEmployee={{employeeDni}}&fullName=Ada Lovelace&page=0&size=20&sort=startDate,asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "vacations"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "disabled": true
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-07-01",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-07-31",
+                  "disabled": true
+                },
+                {
+                  "key": "dniEmployee",
+                  "value": "{{employeeDni}}",
+                  "disabled": true
+                },
+                {
+                  "key": "fullName",
+                  "value": "Ada Lovelace",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "startDate,asc",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. Los filtros y la paginación están desactivados inicialmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear vacaciones",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestDate\": \"2026-06-11\",\n  \"status\": \"PENDING\",\n  \"startDate\": \"2026-07-01\",\n  \"endDate\": \"2026-07-10\",\n  \"reviewComment\": null,\n  \"dniEmployee\": \"{{employeeDni}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "vacations"
+              ]
+            },
+            "description": "Requiere ADMIN/STAFF o el EMPLOYEE dueño del DNI."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar vacaciones",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestDate\": \"2026-06-11\",\n  \"status\": \"APPROVED\",\n  \"startDate\": \"2026-07-05\",\n  \"endDate\": \"2026-07-15\",\n  \"reviewComment\": \"Vacaciones aprobadas\",\n  \"dniEmployee\": \"{{employeeDni}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations/{{vacationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "vacations",
+                "{{vacationId}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar vacaciones",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vacations/{{vacationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "vacations",
+                "{{vacationId}}"
+              ]
+            },
+            "description": "Requiere ADMIN o el EMPLOYEE dueño si la solicitud está PENDING."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "13 Licenses",
+      "description": "Licencias y su revisión.",
+      "item": [
+        {
+          "name": "Listar licencias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/licenses?status=PENDING&dniEmployee={{employeeDni}}&startDate=2026-06-01&endDate=2026-06-30&isPaid=true&page=0&size=20&sort=startDate,desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "licenses"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "disabled": true
+                },
+                {
+                  "key": "dniEmployee",
+                  "value": "{{employeeDni}}",
+                  "disabled": true
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-06-01",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-06-30",
+                  "disabled": true
+                },
+                {
+                  "key": "isPaid",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "startDate,desc",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF. Los filtros y la paginación están desactivados inicialmente."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener licencia por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/licenses/{{licenseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "licenses",
+                "{{licenseId}}"
+              ]
+            },
+            "description": "Requiere ADMIN/STAFF o el EMPLOYEE dueño de la licencia."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear licencia",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2026-06-20\",\n  \"endDate\": \"2026-06-22\",\n  \"motive\": \"Control medico\",\n  \"idCertificates\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/licenses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "licenses"
+              ]
+            },
+            "description": "Requiere EMPLOYEE; se vincula mediante el token."
+          },
+          "response": []
+        },
+        {
+          "name": "Revisar licencia",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\",\n  \"isPaid\": true,\n  \"reviewComment\": \"Licencia aprobada con certificado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/licenses/{{licenseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "licenses",
+                "{{licenseId}}"
+              ]
+            },
+            "description": "Requiere ADMIN o STAFF."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar licencia",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/licenses/{{licenseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "licenses",
+                "{{licenseId}}"
+              ]
+            },
+            "description": "Requiere ADMIN o el EMPLOYEE dueño si la licencia está PENDING."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "14 Certificates",
+      "description": "Carga, consulta y eliminación de certificados PDF.",
+      "item": [
+        {
+          "name": "Cargar certificado PDF",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "idLicense",
+                  "value": "{{licenseId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Certificado medico",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/certificates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "certificates"
+              ]
+            },
+            "description": "Requiere ADMIN/STAFF o el EMPLOYEE con acceso a la licencia. Seleccione un PDF en el campo file."
+          },
+          "response": []
+        },
+        {
+          "name": "Descargar certificado PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/certificate/{{certificateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "certificate",
+                "{{certificateId}}"
+              ]
+            },
+            "description": "Requiere ADMIN/STAFF o el EMPLOYEE con acceso. Devuelve application/pdf."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener info del certificado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/certificate-info?id={{certificateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "certificate-info"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{certificateId}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Requiere ADMIN/STAFF o el EMPLOYEE con acceso. El parámetro id es obligatorio."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar certificado",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/certificate/{{certificateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "certificate",
+                "{{certificateId}}"
+              ]
+            },
+            "description": "Requiere ADMIN/STAFF o el EMPLOYEE con acceso."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "staffToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "employeeToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loginTokenVariable",
+      "value": "adminToken",
+      "type": "string"
+    },
+    {
+      "key": "accountIdentifier",
+      "value": "staff.demo",
+      "type": "string"
+    },
+    {
+      "key": "branchId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "departmentId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "positionId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "employeeDni",
+      "value": "40111222",
+      "type": "string"
+    },
+    {
+      "key": "workScheduleId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "workRequestId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "payrollPeriodId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "payrollConceptId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "additionConceptId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "deductionConceptId",
+      "value": "2",
+      "type": "string"
+    },
+    {
+      "key": "payrollId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "vacationId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "licenseId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "certificateId",
+      "value": "1",
+      "type": "string"
+    }
+  ]
+}

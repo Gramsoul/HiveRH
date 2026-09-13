@@ -1,7 +1,7 @@
 package com.HiveGroup.HiveRH.Features.Employee.DTO;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.GenreEnum;
-import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
+import com.HiveGroup.HiveRH.Common.Utils.Enums.EmployeeStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
@@ -90,7 +90,7 @@ public record EmployeeUpdateDTO(
         LocalDate termination_date,
 
         @NotNull(message = "El estado del empleado es obligatorio")
-        StatusEnum status,
+        EmployeeStatus status,
 
         @NotNull(message = "El salario base es obligatorio")
         @Positive(
@@ -102,6 +102,18 @@ public record EmployeeUpdateDTO(
         @Positive(
                 message = "El ID de la sucursal debe ser mayor que cero"
         )
-Long id_branch
+        Long id_branch,
+
+        @NotNull(message = "El puesto es obligatorio")
+        @Positive(
+                message = "El ID del puesto debe ser mayor que cero"
+        )
+        Long id_position,
+
+        @NotNull(message = "El departamento es obligatorio")
+        @Positive(
+                message = "El ID del departamento debe ser mayor que cero"
+        )
+        Long id_department
 ) {
 }

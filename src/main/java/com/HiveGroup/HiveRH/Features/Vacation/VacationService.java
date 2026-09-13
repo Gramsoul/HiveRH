@@ -1,9 +1,13 @@
 package com.HiveGroup.HiveRH.Features.Vacation;
 
-import com.HiveGroup.HiveRH.Common.Utils.Enums.StatusEnum;
+import com.HiveGroup.HiveRH.Common.Utils.DTOs.PageResponseDTO;
+import com.HiveGroup.HiveRH.Common.Utils.Enums.AbsenceStatus;
+import com.HiveGroup.HiveRH.Common.Utils.Enums.EmployeeStatus;
 import com.HiveGroup.HiveRH.Common.Security.Config.SecurityAuthorizationService;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Common.Utils.TextSearchUtils;
+import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
+import com.HiveGroup.HiveRH.Features.Account.AccountRepository;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeEntity;
 import com.HiveGroup.HiveRH.Features.Employee.EmployeeRepository;
 import com.HiveGroup.HiveRH.Features.Vacation.DTO.VacationFilterDTO;
@@ -12,7 +16,10 @@ import com.HiveGroup.HiveRH.Features.Vacation.DTO.VacationResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -22,6 +29,7 @@ public class VacationService {
 
     private final VacationRepository vacationRepository;
     private final EmployeeRepository employeeRepository;
+    private final AccountRepository accountRepository;
     private final VacationMapper vacationMapper;
     private final SecurityAuthorizationService securityAuthorizationService;
 
@@ -53,6 +61,9 @@ public class VacationService {
         );
 
         VacationEntity vacation = vacationMapper.toEntity(request, employee);
+        vacation.setStatus(AbsenceStatus.PENDING);
+        vacation.setReviewedBy(null);
+        vacation.setReviewComment(null);
 
         VacationEntity savedVacation = vacationRepository.save(vacation);
 
@@ -70,7 +81,7 @@ public class VacationService {
 
     // Listar vacaciones con filtros
     @Transactional(readOnly = true)
-    public List<VacationResponse> findAllByFilter(VacationFilterDTO filters) {
+    public PageResponseDTO<VacationResponse> findAllByFilter(VacationFilterDTO filters, Pageable pageable) {
 
         VacationFilterDTO activeFilters = filters != null
                 ? filters
@@ -78,14 +89,16 @@ public class VacationService {
 
         validateFilterDateRange(activeFilters);
 
-        return vacationRepository.findAll()
+        List<VacationResponse> filteredVacations = vacationRepository.findAll()
                 .stream()
-                .filter(vacation -> filterById(vacation, activeFilters.idVacation()))
-                .filter(vacation -> filterByAccepted(vacation, activeFilters.accepted()))
+                .filter(vacation -> filterByStatus(vacation, activeFilters.status()))
                 .filter(vacation -> filterByDateRange(vacation, activeFilters))
+                .filter(vacation -> filterByEmployeeDni(vacation, activeFilters.dniEmployee()))
                 .filter(vacation -> filterByEmployeeFullName(vacation, activeFilters.fullName()))
                 .map(vacationMapper::toResponse)
                 .toList();
+
+        return toPageResponse(filteredVacations, pageable);
     }
 
     // Actualizar vacaciones
@@ -119,10 +132,9 @@ public class VacationService {
                         : LocalDate.now()
         );
 
-        vacation.setAccepted(request.accepted());
+        applyReviewData(vacation, request);
         vacation.setStartDate(request.startDate());
         vacation.setEndDate(request.endDate());
-        vacation.setPaid(request.paid());
         vacation.setEmployee(employee);
 
         VacationEntity updatedVacation = vacationRepository.save(vacation);
@@ -186,7 +198,7 @@ public class VacationService {
     // Validar si el empleado puede tener vacaciones
     private void validateEmployeeCanHaveVacation(EmployeeEntity employee, LocalDate startDate) {
 
-        if (employee.getStatus() != StatusEnum.ACTIVE) {
+        if (employee.getStatus() != EmployeeStatus.ACTIVE) {
             throw new IllegalArgumentException("No se pueden registrar vacaciones para un empleado que no está activo");
         }
 
@@ -204,6 +216,11 @@ public class VacationService {
 
         if (requestDate != null && requestDate.isAfter(startDate)) {
             throw new IllegalArgumentException("La fecha de solicitud no puede ser posterior al inicio de las vacaciones");
+        }
+
+        LocalDate effectiveRequestDate = requestDate != null ? requestDate : LocalDate.now();
+        if (countBusinessDaysBetween(effectiveRequestDate, startDate) < 5) {
+            throw new IllegalArgumentException("Las vacaciones deben solicitarse con al menos 5 días hábiles de anticipación");
         }
     }
 
@@ -252,14 +269,9 @@ public class VacationService {
         }
     }
 
-    private boolean filterById(VacationEntity vacation, Long idVacation) {
+    private boolean filterByStatus(VacationEntity vacation, AbsenceStatus status) {
 
-        return idVacation == null || vacation.getId_vacation().equals(idVacation);
-    }
-
-    private boolean filterByAccepted(VacationEntity vacation, Boolean accepted) {
-
-        return accepted == null || vacation.isAccepted() == accepted;
+        return status == null || vacation.getStatus() == status;
     }
 
     private boolean filterByDateRange(VacationEntity vacation, VacationFilterDTO filters) {
@@ -274,12 +286,83 @@ public class VacationService {
         return startsBeforeFilterEnd && endsAfterFilterStart;
     }
 
+    private boolean filterByEmployeeDni(VacationEntity vacation, String dniEmployee) {
+
+        return dniEmployee == null || dniEmployee.isBlank() || vacation.getEmployee().getDni().equals(dniEmployee);
+    }
+
     private boolean filterByEmployeeFullName(VacationEntity vacation, String fullName) {
 
         return TextSearchUtils.matchesFullName(
                 vacation.getEmployee().getName(),
                 vacation.getEmployee().getLastName(),
                 fullName
+        );
+    }
+
+    private void applyReviewData(VacationEntity vacation, VacationRequest request) {
+        if (request.status() != null) {
+            vacation.setStatus(request.status());
+            vacation.setReviewedBy(request.status() == AbsenceStatus.PENDING ? null : getCurrentAccount());
+        }
+
+        vacation.setReviewComment(request.reviewComment());
+    }
+
+    private AccountEntity getCurrentAccount() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new org.springframework.security.access.AccessDeniedException("No hay usuario autenticado");
+        }
+
+        String username = authentication.getName();
+        return accountRepository.findByUserOrEmail(username, username)
+                .orElseThrow(() -> new EntityNotFoundException("Cuenta no encontrada", "Account"));
+    }
+
+    private int countBusinessDaysBetween(LocalDate fromExclusive, LocalDate toInclusive) {
+        int businessDays = 0;
+        LocalDate date = fromExclusive.plusDays(1);
+
+        while (!date.isAfter(toInclusive)) {
+            if (date.getDayOfWeek() != DayOfWeek.SATURDAY
+                    && date.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                businessDays++;
+            }
+
+            date = date.plusDays(1);
+        }
+
+        return businessDays;
+    }
+
+    private PageResponseDTO<VacationResponse> toPageResponse(List<VacationResponse> vacations, Pageable pageable) {
+        if (pageable == null || pageable.isUnpaged()) {
+            return new PageResponseDTO<>(
+                    vacations,
+                    0,
+                    vacations.size(),
+                    vacations.size(),
+                    vacations.isEmpty() ? 0 : 1
+            );
+        }
+
+        int page = pageable.getPageNumber();
+        int size = pageable.getPageSize();
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + size, vacations.size());
+        List<VacationResponse> content = start >= vacations.size()
+                ? List.of()
+                : vacations.subList(start, end);
+
+        int totalPages = (int) Math.ceil((double) vacations.size() / size);
+
+        return new PageResponseDTO<>(
+                content,
+                page,
+                size,
+                vacations.size(),
+                totalPages
         );
     }
 }
