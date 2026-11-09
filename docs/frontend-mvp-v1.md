@@ -1,6 +1,6 @@
 # Frontend MVP 1.0
 
-Ultima actualizacion: 2026-09-22.
+Ultima actualizacion: 2026-10-29.
 
 ## Proposito y fuente
 
@@ -42,12 +42,13 @@ Una cuenta `ADMIN` o `STAFF` con empleado vinculado conserva el acceso a sus rec
 - ABM logico de sucursales, departamentos y puestos para `ADMIN`.
 - Filtros operativos y paginacion para empleados, vacaciones, licencias y horarios.
 - Foto de perfil, aprovechando la capacidad agregada en el backend durante el sprint de cierre. Su inclusion en la demo final queda pendiente de confirmar y no debe bloquear los flujos MUST.
+- Consulta de la cuenta autenticada y autogestion de email/password.
 
 ## Fuera del Frontend MVP 1.0
 
 - Payroll y liquidacion legal argentina, aun cuando el backend conserve un modelo academico simplificado.
 - `WorkRequest` y cambios puntuales de jornada.
-- Administracion avanzada de cuentas, registro de cuentas sin empleado y cambio de email/password, salvo que se incorporen expresamente al alcance.
+- Administracion avanzada de cuentas y registro de cuentas sin empleado.
 - Denuncias y suspensiones. Estos modulos fueron removidos del proyecto y no deben reintroducirse sin confirmacion explicita.
 - Integraciones con ARCA, bancos, biometricos o geolocalizacion.
 - Aplicacion movil nativa, analitica avanzada, tableros ejecutivos, exportaciones masivas, onboarding documental, evaluacion de desempeno, motor dinamico de permisos e inteligencia artificial.
@@ -65,6 +66,7 @@ Una cuenta `ADMIN` o `STAFF` con empleado vinculado conserva el acceso a sus rec
 La inspeccion original partio de `dev` y el contrato de autenticacion fue actualizado en `C-Feature/cookies-refresh-token` el 2026-09-15.
 
 - Login y refresh devuelven `accessToken`, `tokenType`, `expiresInSeconds`, `identifier`, `roles` y `mustChangePassword`. El frontend no necesita decodificar el JWT.
+- `identifier` representa el username real de la cuenta. `GET /api/accounts/me` devuelve `email`, `user` y `rol`, incluso cuando la cuenta no tiene empleado vinculado.
 - El refresh token se entrega solamente mediante la cookie `hiverh_refresh`, con `HttpOnly`, `Path=/api/auth` y politica `Secure`/`SameSite` configurable por ambiente.
 - `GET /api/auth/csrf` entrega un token CSRF XOR enmascarado requerido por `POST /api/auth/login`, `/refresh` y `/logout`. Su valor difiere intencionalmente de la cookie base `XSRF-TOKEN`.
 - `GET /api/employees/me` permite obtener el perfil del empleado vinculado.
@@ -161,6 +163,10 @@ Las estimaciones son iniciales. El equipo debe refinarlas en Planning Poker y aj
 - `US-FE-01` - Como usuario con empleado vinculado, quiero consultar mi perfil para verificar mis datos. `3 SP`, MUST.
   - Integrar `GET /api/employees/me`.
   - Mostrar datos personales y asignacion activa.
+- `US-FE-01B` - Como usuario autenticado, quiero consultar mi cuenta y cambiar mi email o password. `3 SP`, SHOULD.
+  - Integrar `GET /api/accounts/me`, `PATCH /api/accounts/me/email` y `PATCH /api/accounts/me/password`.
+  - La cuenta existe aunque el usuario no tenga empleado asociado.
+  - Los cambios de email/password revocan refresh tokens; cerrar la sesion o solicitar una nueva autenticacion al finalizar.
 
 #### EPIC-FE-03 - Gestion de empleados
 

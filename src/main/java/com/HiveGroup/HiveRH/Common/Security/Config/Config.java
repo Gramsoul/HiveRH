@@ -55,17 +55,20 @@ public class Config {
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/accounts").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers(HttpMethod.GET, "/api/accounts/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/accounts/*").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers(HttpMethod.PATCH, "/api/accounts/*/rol").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers(HttpMethod.PATCH, "/api/accounts/me/**").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/employees").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers(HttpMethod.POST, "/api/employees").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers(HttpMethod.PATCH, "/api/employees/picture").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/employees/picture/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/employees/**").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers(HttpMethod.PATCH, "/api/employees/**").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers(HttpMethod.DELETE, "/api/employees/**").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.PATCH, "/api/employees/picture").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/employees/picture/**").authenticated()
 
+                        .requestMatchers(HttpMethod.GET, "/api/branches/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/branches").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/branches/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/branches/**").hasRole("ADMIN")
@@ -97,6 +100,7 @@ public class Config {
                         .requestMatchers("/api/payroll-periods/**").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers("/api/payroll-concepts/**").hasAnyRole("ADMIN", "STAFF")
 
+                        .requestMatchers(HttpMethod.GET, "/api/licenses/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/licenses").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers(HttpMethod.GET, "/api/licenses/*").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/licenses").authenticated()

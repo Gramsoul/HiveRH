@@ -160,6 +160,8 @@ public class EmployeeService {
         validateAdult(employeeUpdateDTO.birth_date());
         validateProtectedAdminCanNotBeTerminated(employee, employeeUpdateDTO.status());
 
+        syncLinkedAccountUser(employee, employeeUpdateDTO.dni());
+
         employee.setName(employeeUpdateDTO.name());
         employee.setLastName(employeeUpdateDTO.lastName());
         employee.setPhoneNumber(employeeUpdateDTO.phoneNumber());
@@ -201,6 +203,7 @@ public class EmployeeService {
 
         if (employeePatchDTO.dni() != null) {
             validateUniqueDni(employeePatchDTO.dni(), employee.getId_employee());
+            syncLinkedAccountUser(employee, employeePatchDTO.dni());
         }
 
         if (employeePatchDTO.birth_date() != null) {
@@ -334,6 +337,7 @@ public class EmployeeService {
                 .password(passwordEncoder.encode(dni))
                 .rol(RolEnum.EMPLOYEE)
                 .status(AccountStatus.ACTIVE)
+                .mustChangePassword(true)
                 .build();
 
         return accountRepository.save(account);
@@ -381,6 +385,41 @@ public class EmployeeService {
                             "Ya existe un empleado registrado con el DNI " + dni
                     );
                 });
+    }
+
+    private void syncLinkedAccountUser(EmployeeEntity employee, String newDni) {
+        if (newDni == null || Objects.equals(employee.getDni(), newDni)) {
+            return;
+        }
+
+        AccountEntity linkedAccount = employee.getAccount();
+
+        accountRepository.findByUser(newDni)
+                .filter(existingAccount -> linkedAccount == null
+                        || !Objects.equals(existingAccount.getId_account(), linkedAccount.getId_account()))
+                .ifPresent(existingAccount -> {
+                    throw new IllegalArgumentException(
+                            "Ya existe una cuenta asociada al DNI " + newDni
+                    );
+                });
+
+        if (linkedAccount == null) {
+            return;
+        }
+
+        boolean mustChangePassword = linkedAccount.getMustChangePassword() != null
+                ? linkedAccount.getMustChangePassword()
+                : passwordEncoder.matches(linkedAccount.getUsername(), linkedAccount.getPassword());
+
+        linkedAccount.setUser(newDni);
+        linkedAccount.setMustChangePassword(mustChangePassword);
+
+        if (mustChangePassword) {
+            linkedAccount.setPassword(passwordEncoder.encode(newDni));
+        }
+
+        accountRepository.save(linkedAccount);
+        refreshTokenService.revokeAllForAccount(linkedAccount);
     }
 
     private void validateProtectedAdminCanNotBeTerminated(EmployeeEntity employee, EmployeeStatus requestedStatus) {

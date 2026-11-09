@@ -32,6 +32,23 @@ public class AccountService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public ResponseAccountDTO findCurrent() {
+        return accountMapper.toResponse(getCurrentAccount());
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseAccountDTO findByUser(String user) {
+        if (user == null || user.isBlank()) {
+            throw new IllegalArgumentException("El usuario es obligatorio");
+        }
+
+        AccountEntity account = accountRepository.findByUser(user)
+                .orElseThrow(() -> new EntityNotFoundException("Cuenta inexistente", "AccountEntity"));
+
+        return accountMapper.toResponse(account);
+    }
+
     public ResponseAccountDTO save(NewAccountDTO newAccountDTO){
         validateCanCreateRole(newAccountDTO.rol());
 
@@ -39,6 +56,7 @@ public class AccountService {
         entity.setPassword(
                 passwordEncoder.encode(entity.getPassword())
         );
+        entity.setMustChangePassword(false);
         accountRepository.save(entity);
 
         return accountMapper.toResponse(entity);
@@ -97,6 +115,7 @@ public class AccountService {
         }
 
         account.setPassword(passwordEncoder.encode(newPassword));
+        account.setMustChangePassword(false);
 
         accountRepository.save(account);
         refreshTokenService.revokeAllForAccount(account);

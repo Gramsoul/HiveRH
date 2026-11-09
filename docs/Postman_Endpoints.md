@@ -182,6 +182,26 @@ Params: no lleva.
 
 Respuesta: lista cuentas sin exponer password. Cada item devuelve `email`, `user` y `rol`.
 
+### 3.a. Obtener mi cuenta
+
+```http
+GET {{baseUrl}}/api/accounts/me
+```
+
+Auth: cualquier token valido.
+
+Params: no lleva. La cuenta se obtiene del token autenticado.
+
+Respuesta:
+
+```json
+{
+  "email": "employee.demo@hiverh.com",
+  "user": "employee.demo",
+  "rol": "EMPLOYEE"
+}
+```
+
 ### 4. Cambiar rol de cuenta
 
 ```http

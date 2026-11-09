@@ -1,6 +1,6 @@
 # Current State - HiveRH
 
-Ultima actualizacion: 2026-10-21.
+Ultima actualizacion: 2026-10-29.
 
 ## Que funciona
 
@@ -12,6 +12,7 @@ Ultima actualizacion: 2026-10-21.
 - `POST /api/auth/register` restringido a `ADMIN`.
 - Roles actuales: `ADMIN`, `STAFF`, `EMPLOYEE`.
 - Cuentas con `AccountStatus` y username/email unicos en entidad.
+- `GET /api/accounts/me` devuelve `email`, `user` y `rol` de la cuenta autenticada sin depender de que tenga un empleado vinculado.
 - Alta de empleados con cuenta `EMPLOYEE` automatica.
 - Baja logica de empleados: `EmployeeStatus.TERMINATED`, cierre de asignaciones activas y cuenta asociada inactiva.
 - Proteccion de cuenta principal `admin` contra baja por flujo de empleado.

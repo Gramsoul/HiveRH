@@ -12,6 +12,7 @@ import com.HiveGroup.HiveRH.Features.Branch.BranchRepository;
 import com.HiveGroup.HiveRH.Features.Department.DepartamentRepository;
 import com.HiveGroup.HiveRH.Features.Department.DepartmentEntity;
 import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeeResponseDTO;
+import com.HiveGroup.HiveRH.Features.Employee.DTO.EmployeePatchDTO;
 import com.HiveGroup.HiveRH.Features.EmployeeAssignment.EmployeeAssignmentEntity;
 import com.HiveGroup.HiveRH.Features.Position.PositionEntity;
 import com.HiveGroup.HiveRH.Features.Position.PositionRepository;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -100,6 +102,52 @@ class EmployeeServiceTest {
         verify(accountRepository).save(account);
         verify(refreshTokenService).revokeAllForAccount(account);
         verify(employeeRepository).save(employee);
+    }
+
+    @Test
+    void patchByDniSynchronizesLinkedAccountUserAndInitialPassword() {
+        EmployeeEntity employee = activeEmployee("40111222");
+        AccountEntity account = account("40111222", RolEnum.STAFF);
+        account.setMustChangePassword(true);
+        employee.setAccount(account);
+
+        when(employeeRepository.findByDni("40111222")).thenReturn(Optional.of(employee));
+        when(employeeRepository.findByDni("40222333")).thenReturn(Optional.empty());
+        when(accountRepository.findByUser("40222333")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("40222333")).thenReturn("encoded-40222333");
+        when(employeeRepository.save(employee)).thenReturn(employee);
+
+        EmployeeResponseDTO response = employeeService.patchByDni(
+                "40111222",
+                patchWithDni("40222333")
+        );
+
+        assertEquals("40222333", response.dni());
+        assertEquals("40222333", account.getUser());
+        assertEquals("encoded-40222333", account.getPassword());
+        assertTrue(account.getMustChangePassword());
+        verify(accountRepository).save(account);
+        verify(refreshTokenService).revokeAllForAccount(account);
+    }
+
+    private EmployeePatchDTO patchWithDni(String dni) {
+        return new EmployeePatchDTO(
+                null,
+                null,
+                null,
+                null,
+                dni,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
     }
 
     private EmployeeEntity activeEmployee(String dni) {

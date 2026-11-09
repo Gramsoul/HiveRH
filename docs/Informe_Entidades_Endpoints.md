@@ -362,6 +362,12 @@ Al registrar una cuenta, la contraseña se guarda encriptada por seguridad.
 
 ## Account
 
+### GET /api/accounts/me
+
+Devuelve `email`, `user` y `rol` de la cuenta asociada al token autenticado.
+
+No recibe IDs ni identificadores externos, por lo que siempre consulta la cuenta actual.
+
 ### PATCH /api/accounts/me/email
 
 Permite que el usuario autenticado cambie su propio email.
@@ -1182,6 +1188,26 @@ description = Certificado médico
 
 ```text
 file = archivo.pdf
+```
+
+---
+
+## Consultar cuenta propia
+
+M�todo: GET
+
+Endpoint: /api/accounts/me
+
+Devuelve los datos p�blicos de la cuenta autenticada sin exponer la contrase�a.
+
+Respuesta:
+
+```json
+{
+  "email": "employee.demo@hiverh.com",
+  "user": "employee.demo",
+  "rol": "EMPLOYEE"
+}
 ```
 
 ---

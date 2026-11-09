@@ -1,6 +1,6 @@
 # AI Context - HiveRH
 
-Ultima actualizacion: 2026-09-15.
+Ultima actualizacion: 2026-10-29.
 
 ## Contexto general
 
@@ -43,13 +43,14 @@ Este recorte aplica al frontend y al MVP 1.0; no elimina features del backend. P
 - `POST /api/auth/refresh` rota la cookie y devuelve otro `accessToken`. Ante un `401`, el frontend hace un solo refresh y reintenta la solicitud original una vez; un `403` no dispara refresh.
 - `POST /api/auth/logout` revoca toda la familia del refresh token y borra la cookie.
 - `roles` y `mustChangePassword` vienen en login/refresh para navegacion y UX. El frontend no necesita decodificar el JWT y nunca debe tratar esos datos como autorizacion definitiva.
+- `identifier` en login/refresh siempre representa el username real de la cuenta, aunque el inicio de sesion se haya hecho con email. `GET /api/accounts/me` devuelve el `email`, `user` y `rol` actuales de la cuenta autenticada.
 - Cambios de rol, email, password y baja del empleado revocan los refresh tokens de la cuenta. El access token ya emitido puede vivir hasta su expiracion corta.
 - CORS usa una allowlist exacta en `FRONTEND_ORIGINS` y permite credenciales. Si frontend y API estan en sitios distintos, configurar `SameSite=None`, `Secure=true` y HTTPS.
 
 ## Modulos principales
 
 - `Auth`: login y register administrativo.
-- `Account`: listado de cuentas, cambio de rol, email propio y password propia.
+- `Account`: consulta de la cuenta autenticada mediante `GET /api/accounts/me`, listado de cuentas, cambio de rol, email propio y password propia.
 - `Employee`: alta, consulta, actualizacion y baja logica de empleados.
 - `EmployeeAssignment`: historial de asignaciones laborales con sucursal, departamento, puesto, `startDate`, `endDate` y `active`.
 - `Branch`, `Department`, `Position`: catalogos organizacionales.

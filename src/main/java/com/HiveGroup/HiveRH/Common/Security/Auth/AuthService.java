@@ -1,7 +1,6 @@
 package com.HiveGroup.HiveRH.Common.Security.Auth;
 
 import com.HiveGroup.HiveRH.Common.Utils.Enums.AccountStatus;
-import com.HiveGroup.HiveRH.Common.Utils.Enums.RolEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Features.Account.AccountEntity;
 import com.HiveGroup.HiveRH.Features.Account.AccountRepository;
@@ -35,8 +34,11 @@ public class AuthService {
     }
 
     public boolean mustChangePassword(AccountEntity account) {
-        return account.getRol() == RolEnum.EMPLOYEE
-                && passwordEncoder.matches(account.getUsername(), account.getPassword());
+        if (account.getMustChangePassword() != null) {
+            return account.getMustChangePassword();
+        }
+
+        return passwordEncoder.matches(account.getUsername(), account.getPassword());
     }
 
 }
