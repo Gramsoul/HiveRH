@@ -38,6 +38,10 @@ public class JwtService {
         return buildToken(claims, userDetails, jwtExpiration);
     }
 
+    public long getExpirationSeconds() {
+        return jwtExpiration / 1000;
+    }
+
     public List<GrantedAuthority> extractAuthorities(String token) {
         Claims claims = extractAllClaims(token);
         List<?> rawRoles = claims.get("roles", List.class);

@@ -20,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -48,6 +49,28 @@ public class LicenseService {
                 .toList();
 
         return toPageResponse(filteredLicenses, pageable);
+    }
+
+    public PageResponseDTO<LicenseDTO> getCurrentEmployeeLicenses(
+            AbsenceStatus status,
+            LocalDate startDate,
+            LocalDate endDate,
+            Boolean isPaid,
+            Pageable pageable
+    ) {
+        LicenseFilterDTO filters = new LicenseFilterDTO(status, null, startDate, endDate, isPaid);
+        validateFilterDateRange(filters);
+
+        EmployeeEntity employee = getCurrentEmployee();
+
+        List<LicenseDTO> licenses = licenseRepository.findByEmployee(employee).stream()
+                .filter(license -> filterByStatus(license, status))
+                .filter(license -> matchesDateRange(license, filters))
+                .filter(license -> filterByPaid(license, isPaid))
+                .map(this::toFullDTO)
+                .toList();
+
+        return toPageResponse(licenses, pageable);
     }
 
     @Transactional

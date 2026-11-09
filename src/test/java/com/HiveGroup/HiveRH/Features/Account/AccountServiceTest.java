@@ -1,5 +1,6 @@
 package com.HiveGroup.HiveRH.Features.Account;
 
+import com.HiveGroup.HiveRH.Common.Security.Auth.RefreshTokenService;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.AccountStatus;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.RolEnum;
 import com.HiveGroup.HiveRH.Features.Account.DTO.NewAccountDTO;
@@ -20,6 +21,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -36,6 +38,9 @@ class AccountServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private RefreshTokenService refreshTokenService;
 
     @InjectMocks
     private AccountService accountService;
@@ -71,6 +76,40 @@ class AccountServiceTest {
     }
 
     @Test
+    void findCurrentReturnsAuthenticatedAccountResponse() {
+        AccountEntity currentAccount = authenticateAs(RolEnum.EMPLOYEE);
+        ResponseAccountDTO expected = new ResponseAccountDTO(
+                "employee.demo@hiverh.com",
+                "employee.demo",
+                RolEnum.EMPLOYEE
+        );
+
+        when(accountMapper.toResponse(currentAccount)).thenReturn(expected);
+
+        ResponseAccountDTO response = accountService.findCurrent();
+
+        assertEquals(expected, response);
+        verify(accountMapper).toResponse(currentAccount);
+        verifyNoInteractions(accountRepository);
+    }
+
+    @Test
+    void findByUserReturnsMatchingAccount() {
+        AccountEntity account = account("40111222", RolEnum.EMPLOYEE);
+        ResponseAccountDTO expected = new ResponseAccountDTO(
+                "40111222@hiverh.com",
+                "40111222",
+                RolEnum.EMPLOYEE
+        );
+
+        when(accountRepository.findByUser("40111222")).thenReturn(Optional.of(account));
+        when(accountMapper.toResponse(account)).thenReturn(expected);
+
+        assertEquals(expected, accountService.findByUser("40111222"));
+        verify(accountRepository).findByUser("40111222");
+    }
+
+    @Test
     void staffCannotAssignAdminRole() {
         authenticateAs(RolEnum.STAFF);
 
@@ -101,12 +140,14 @@ class AccountServiceTest {
         assertEquals(RolEnum.EMPLOYEE, target.getRol());
         assertEquals(expected, response);
         verify(accountRepository).save(target);
+        verify(refreshTokenService).revokeAllForAccount(target);
     }
 
     @Test
     void adminCanAssignAdminRole() {
         authenticateAs(RolEnum.ADMIN);
         AccountEntity target = account("staff.demo", RolEnum.STAFF);
+        target.setMustChangePassword(true);
         ResponseAccountDTO expected = new ResponseAccountDTO(
                 "staff.demo@hiverh.com",
                 "staff.demo",
@@ -120,8 +161,33 @@ class AccountServiceTest {
         ResponseAccountDTO response = accountService.updateRole("staff.demo", RolEnum.ADMIN);
 
         assertEquals(RolEnum.ADMIN, target.getRol());
+        assertTrue(target.getMustChangePassword());
         assertEquals(expected, response);
         verify(accountRepository).save(target);
+        verify(refreshTokenService).revokeAllForAccount(target);
+    }
+
+    @Test
+    void changingPasswordClearsMustChangePasswordFlag() {
+        AccountEntity currentAccount = authenticateAs(RolEnum.STAFF);
+        currentAccount.setMustChangePassword(true);
+        ResponseAccountDTO expected = new ResponseAccountDTO(
+                currentAccount.getEmail(),
+                currentAccount.getUser(),
+                currentAccount.getRol()
+        );
+
+        when(passwordEncoder.matches("current-password", currentAccount.getPassword())).thenReturn(true);
+        when(passwordEncoder.matches("NewPassword123", currentAccount.getPassword())).thenReturn(false);
+        when(passwordEncoder.encode("NewPassword123")).thenReturn("encoded-new-password");
+        when(accountMapper.toResponse(currentAccount)).thenReturn(expected);
+
+        accountService.updateCurrentPassword("current-password", "NewPassword123");
+
+        assertEquals("encoded-new-password", currentAccount.getPassword());
+        assertEquals(false, currentAccount.getMustChangePassword());
+        verify(accountRepository).save(currentAccount);
+        verify(refreshTokenService).revokeAllForAccount(currentAccount);
     }
 
     @Test
@@ -187,7 +253,7 @@ class AccountServiceTest {
         verify(accountRepository).save(entity);
     }
 
-    private void authenticateAs(RolEnum rol) {
+    private AccountEntity authenticateAs(RolEnum rol) {
         AccountEntity currentAccount = account(rol.name().toLowerCase() + ".demo", rol);
         var authentication = new UsernamePasswordAuthenticationToken(
                 currentAccount,
@@ -195,6 +261,7 @@ class AccountServiceTest {
                 currentAccount.getAuthorities()
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        return currentAccount;
     }
 
     private AccountEntity account(String user, RolEnum rol) {

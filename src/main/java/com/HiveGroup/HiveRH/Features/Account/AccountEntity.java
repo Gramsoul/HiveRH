@@ -40,6 +40,10 @@ public class AccountEntity implements UserDetails {
     @Column(name = "status", nullable = false)
     private AccountStatus status = AccountStatus.ACTIVE;
 
+    @Builder.Default
+    @Column(name = "must_change_password")
+    private Boolean mustChangePassword = false;
+
     @OneToOne(mappedBy = "account")
     private EmployeeEntity employee;
 

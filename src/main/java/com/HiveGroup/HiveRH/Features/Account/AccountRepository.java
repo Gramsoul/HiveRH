@@ -9,4 +9,6 @@ public interface AccountRepository extends JpaRepository<@NonNull AccountEntity,
 
     Optional<@NonNull AccountEntity> findByUserOrEmail(String user, String email);
 
+    Optional<@NonNull AccountEntity> findByUser(String user);
+
 }

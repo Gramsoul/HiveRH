@@ -20,6 +20,13 @@ public class BranchService {
                 .toList();
     }
 
+    public BranchResponseDTO findById(Long id) {
+        BranchEntity branch = branchRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Sucursal no encontrada", "Branch"));
+
+        return toDTO(branch);
+    }
+
     public BranchResponseDTO create(BranchCreateDTO branchCreateDTO) {
         BranchEntity branch = BranchEntity.builder()
                 .branchName(branchCreateDTO.name())

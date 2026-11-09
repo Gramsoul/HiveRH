@@ -17,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.DayOfWeek;
@@ -101,6 +103,28 @@ public class VacationService {
         return toPageResponse(filteredVacations, pageable);
     }
 
+    @Transactional(readOnly = true)
+    public PageResponseDTO<VacationResponse> findCurrentEmployeeVacations(
+            AbsenceStatus status,
+            LocalDate startDate,
+            LocalDate endDate,
+            Pageable pageable
+    ) {
+        VacationFilterDTO filters = new VacationFilterDTO(status, startDate, endDate, null, null);
+        validateFilterDateRange(filters);
+
+        EmployeeEntity employee = findCurrentEmployee();
+
+        List<VacationResponse> vacations = vacationRepository.findByEmployee(employee)
+                .stream()
+                .filter(vacation -> filterByStatus(vacation, status))
+                .filter(vacation -> filterByDateRange(vacation, filters))
+                .map(vacationMapper::toResponse)
+                .toList();
+
+        return toPageResponse(vacations, pageable);
+    }
+
     // Actualizar vacaciones
     @Transactional
     public VacationResponse updateById(Long idVacation, VacationRequest request) {
@@ -177,6 +201,16 @@ public class VacationService {
                         "Empleado no encontrado",
                         "Employee"
                 ));
+    }
+
+    private EmployeeEntity findCurrentEmployee() {
+        AccountEntity account = getCurrentAccount();
+
+        if (account.getEmployee() == null) {
+            throw new EntityNotFoundException("Empleado no encontrado para la cuenta autenticada", "Employee");
+        }
+
+        return account.getEmployee();
     }
 
     // Validar datos obligatorios
@@ -310,14 +344,20 @@ public class VacationService {
     }
 
     private AccountEntity getCurrentAccount() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            throw new org.springframework.security.access.AccessDeniedException("No hay usuario autenticado");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AccessDeniedException("No hay usuario autenticado");
+        }
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof AccountEntity account) {
+            return account;
         }
 
         String username = authentication.getName();
         return accountRepository.findByUserOrEmail(username, username)
-                .orElseThrow(() -> new EntityNotFoundException("Cuenta no encontrada", "Account"));
+                .orElseThrow(() -> new EntityNotFoundException("Cuenta inexistente", "AccountEntity"));
     }
 
     private int countBusinessDaysBetween(LocalDate fromExclusive, LocalDate toInclusive) {

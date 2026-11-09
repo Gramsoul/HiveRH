@@ -21,6 +21,7 @@ import java.util.List;
 public class DemoDataCleanupScheduler {
 
     private static final List<String> OPERATIONAL_TABLES = List.of(
+            "refresh_token_session",
             "certificate",
             "work_request",
             "work_schedule",

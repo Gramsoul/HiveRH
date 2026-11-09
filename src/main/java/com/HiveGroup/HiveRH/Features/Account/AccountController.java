@@ -35,6 +35,19 @@ public class AccountController {
         return ResponseEntity.ok(accountService.findAll());
     }
 
+    @GetMapping("/me")
+    @Operation(summary = "Get my account", description = "Returns the email, username, and role of the account associated with the authenticated token.")
+    public ResponseEntity<ResponseAccountDTO> getMyAccount() {
+        return ResponseEntity.ok(accountService.findCurrent());
+    }
+
+    @GetMapping("/{user}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    @Operation(summary = "Get account by user", description = "Returns an account by username. Employee accounts use their synchronized DNI as username.")
+    public ResponseEntity<ResponseAccountDTO> getAccountByUser(@PathVariable String user) {
+        return ResponseEntity.ok(accountService.findByUser(user));
+    }
+
     @PatchMapping("/{identifier}/rol")
     @Operation(summary = "Update account role", description = "Changes the role of an existing account by username, email, or employee DNI when the account username is the employee DNI.")
     public ResponseEntity<ResponseAccountDTO> updateRole(

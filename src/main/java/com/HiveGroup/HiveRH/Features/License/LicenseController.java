@@ -1,6 +1,7 @@
 package com.HiveGroup.HiveRH.Features.License;
 
 import com.HiveGroup.HiveRH.Common.Utils.DTOs.PageResponseDTO;
+import com.HiveGroup.HiveRH.Common.Utils.Enums.AbsenceStatus;
 import com.HiveGroup.HiveRH.Features.License.DTO.LicenseDTO;
 import com.HiveGroup.HiveRH.Features.License.DTO.LicenseFilterDTO;
 import com.HiveGroup.HiveRH.Features.License.DTO.LicenseReviewRequestDTO;
@@ -24,7 +25,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/licenses")
@@ -33,6 +37,24 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "13 Licenses", description = "Employee licenses and approval status.")
 public class LicenseController {
     LicenseService licenseService;
+
+    @GetMapping("/me")
+    @PreAuthorize("@securityAuthorizationService.hasLinkedEmployee()")
+    @Operation(summary = "List my licenses", description = "Returns paginated licenses for the employee linked to the authenticated account, with optional status, date range, and paid status filters.")
+    public ResponseEntity<PageResponseDTO<LicenseDTO>> getMyLicenses(
+            @RequestParam(value = "status", required = false) AbsenceStatus status,
+            @RequestParam(value = "startDate", required = false) LocalDate startDate,
+            @RequestParam(value = "endDate", required = false) LocalDate endDate,
+            @RequestParam(value = "isPaid", required = false) Boolean isPaid,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(licenseService.getCurrentEmployeeLicenses(
+                status,
+                startDate,
+                endDate,
+                isPaid,
+                pageable
+        ));
+    }
 
     @GetMapping
     @Operation(summary = "List licenses", description = "Returns paginated licenses and supports filtering by status, employee DNI, date range, and paid status.")

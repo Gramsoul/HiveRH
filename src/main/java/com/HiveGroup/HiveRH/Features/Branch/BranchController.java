@@ -35,6 +35,13 @@ public class BranchController {
         return ResponseEntity.ok(branchService.findAll());
     }
 
+    @GetMapping("/{id_branch}")
+    @Operation(summary = "Get branch", description = "Returns a branch by ID, including inactive branches.")
+    public ResponseEntity<BranchResponseDTO> getBranchById(
+            @PathVariable("id_branch") @Positive(message = "El ID de la sucursal debe ser mayor que cero") Long idBranch) {
+        return ResponseEntity.ok(branchService.findById(idBranch));
+    }
+
     @PostMapping
     @Operation(summary = "Create branch", description = "Registers a new branch with name, city, and address.")
     public ResponseEntity<BranchResponseDTO> createBranch(@Valid @RequestBody BranchCreateDTO branchCreateDTO) {

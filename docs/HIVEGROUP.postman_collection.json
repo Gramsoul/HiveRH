@@ -146,6 +146,26 @@
           "response": []
         },
         {
+          "name": "Obtener mi cuenta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "me"
+              ]
+            },
+            "description": "Devuelve email, user y rol de la cuenta autenticada. Acepta cualquier token valido."
+          },
+          "response": []
+        },
+        {
           "name": "Cambiar rol de cuenta",
           "request": {
             "method": "PATCH",

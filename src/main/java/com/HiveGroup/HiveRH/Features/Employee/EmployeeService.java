@@ -1,5 +1,6 @@
 package com.HiveGroup.HiveRH.Features.Employee;
 
+import com.HiveGroup.HiveRH.Common.Security.Auth.RefreshTokenService;
 import com.HiveGroup.HiveRH.Common.Utils.DTOs.PageResponseDTO;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.AccountStatus;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.EmployeeStatus;
@@ -55,6 +56,7 @@ public class EmployeeService {
     private final DepartamentRepository departamentRepository;
     private final PasswordEncoder passwordEncoder;
     private final FileLectorService fileLectorService;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public EmployeeResponseDTO create(EmployeeCreateDTO employeeCreateDTO) {
@@ -142,11 +144,7 @@ public class EmployeeService {
         }
         closeActiveAssignments(employee, employee.getTerminationDate());
 
-        if (employee.getAccount() != null) {
-            AccountEntity account = employee.getAccount();
-            account.setStatus(AccountStatus.INACTIVE);
-            accountRepository.save(account);
-        }
+        disableLinkedAccount(employee);
 
         EmployeeEntity deletedEmployee = employeeRepository.save(employee);
 
@@ -161,6 +159,8 @@ public class EmployeeService {
         validateUniqueDni(employeeUpdateDTO.dni(), employee.getId_employee());
         validateAdult(employeeUpdateDTO.birth_date());
         validateProtectedAdminCanNotBeTerminated(employee, employeeUpdateDTO.status());
+
+        syncLinkedAccountUser(employee, employeeUpdateDTO.dni());
 
         employee.setName(employeeUpdateDTO.name());
         employee.setLastName(employeeUpdateDTO.lastName());
@@ -180,6 +180,7 @@ public class EmployeeService {
                 employee.setTerminationDate(LocalDate.now());
             }
             closeActiveAssignments(employee, employee.getTerminationDate());
+            disableLinkedAccount(employee);
         } else {
             updateCurrentAssignment(
                     employee,
@@ -202,6 +203,7 @@ public class EmployeeService {
 
         if (employeePatchDTO.dni() != null) {
             validateUniqueDni(employeePatchDTO.dni(), employee.getId_employee());
+            syncLinkedAccountUser(employee, employeePatchDTO.dni());
         }
 
         if (employeePatchDTO.birth_date() != null) {
@@ -232,6 +234,7 @@ public class EmployeeService {
                 employee.setTerminationDate(LocalDate.now());
             }
             closeActiveAssignments(employee, employee.getTerminationDate());
+            disableLinkedAccount(employee);
         } else if (shouldUpdateAssignment) {
             updateCurrentAssignment(
                     employee,
@@ -334,6 +337,7 @@ public class EmployeeService {
                 .password(passwordEncoder.encode(dni))
                 .rol(RolEnum.EMPLOYEE)
                 .status(AccountStatus.ACTIVE)
+                .mustChangePassword(true)
                 .build();
 
         return accountRepository.save(account);
@@ -383,6 +387,41 @@ public class EmployeeService {
                 });
     }
 
+    private void syncLinkedAccountUser(EmployeeEntity employee, String newDni) {
+        if (newDni == null || Objects.equals(employee.getDni(), newDni)) {
+            return;
+        }
+
+        AccountEntity linkedAccount = employee.getAccount();
+
+        accountRepository.findByUser(newDni)
+                .filter(existingAccount -> linkedAccount == null
+                        || !Objects.equals(existingAccount.getId_account(), linkedAccount.getId_account()))
+                .ifPresent(existingAccount -> {
+                    throw new IllegalArgumentException(
+                            "Ya existe una cuenta asociada al DNI " + newDni
+                    );
+                });
+
+        if (linkedAccount == null) {
+            return;
+        }
+
+        boolean mustChangePassword = linkedAccount.getMustChangePassword() != null
+                ? linkedAccount.getMustChangePassword()
+                : passwordEncoder.matches(linkedAccount.getUsername(), linkedAccount.getPassword());
+
+        linkedAccount.setUser(newDni);
+        linkedAccount.setMustChangePassword(mustChangePassword);
+
+        if (mustChangePassword) {
+            linkedAccount.setPassword(passwordEncoder.encode(newDni));
+        }
+
+        accountRepository.save(linkedAccount);
+        refreshTokenService.revokeAllForAccount(linkedAccount);
+    }
+
     private void validateProtectedAdminCanNotBeTerminated(EmployeeEntity employee, EmployeeStatus requestedStatus) {
         if (requestedStatus == EmployeeStatus.TERMINATED && isProtectedAdminAccount(employee.getAccount())) {
             throw new IllegalArgumentException("La cuenta admin principal no puede ser dada de baja");
@@ -391,6 +430,17 @@ public class EmployeeService {
 
     private boolean isProtectedAdminAccount(AccountEntity account) {
         return account != null && PROTECTED_ADMIN_USER.equalsIgnoreCase(account.getUser());
+    }
+
+    private void disableLinkedAccount(EmployeeEntity employee) {
+        if (employee.getAccount() == null) {
+            return;
+        }
+
+        AccountEntity account = employee.getAccount();
+        account.setStatus(AccountStatus.INACTIVE);
+        accountRepository.save(account);
+        refreshTokenService.revokeAllForAccount(account);
     }
 
     private EmployeeAssignmentEntity createAssignment(

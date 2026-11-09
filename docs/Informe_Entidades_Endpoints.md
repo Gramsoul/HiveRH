@@ -38,7 +38,7 @@ La API puede probarse desde Swagger/OpenAPI y también desde Postman. Esto facil
 
 ## Seguridad, roles y autenticación
 
-El sistema trabaja con autenticación stateless. Primero se realiza el login, luego se obtiene un token JWT y finalmente ese token se envía en el header Authorization para acceder a los endpoints protegidos.
+El sistema trabaja con autenticación stateless híbrida. El login devuelve un access token JWT corto y crea un refresh token opaco rotativo en una cookie HttpOnly. El access token se envía en el header Authorization; la cookie se usa únicamente en los endpoints de autenticación.
 
 Las cuentas implementan UserDetails, por lo que Spring Security puede obtener el username, password, authorities y el estado de la cuenta.
 
@@ -62,9 +62,9 @@ Es el rol de empleado común.
 
 Puede autenticarse, ver su propio perfil y acceder a recursos propios cuando el SecurityAuthorizationService lo permite.
 
-### JWT
+### Access JWT y refresh token
 
-El login genera un token JWT.
+El login y el refresh generan un access JWT. El refresh token se guarda hasheado, rota en cada uso y puede revocarse por familia.
 
 Luego, cada request protegida debe enviar el token en el header Authorization con el siguiente formato:
 
@@ -90,7 +90,7 @@ Los módulos operativos separan permisos por rol: ADMIN y STAFF gestionan recurs
 
 Permite iniciar sesión y registrar cuentas dentro del sistema.
 
-El login recibe las credenciales del usuario y, si son correctas, devuelve un token JWT para poder acceder a los endpoints protegidos.
+El login recibe las credenciales y, si son correctas, devuelve un access JWT y crea la cookie de refresh. Los endpoints de login, refresh y logout exigen un token CSRF obtenido previamente desde `GET /api/auth/csrf`.
 
 El registro de cuentas requiere que el usuario tenga un rol permitido y guarda la contraseña encriptada para mantener la seguridad.
 
@@ -200,7 +200,7 @@ Utiliza multipart/form-data para permitir la carga de archivos desde el cliente 
 
 ## Preparación inicial
 
-- Levantar la base de datos MySQL y configurar las variables DB_URL, DB_USER, DB_PASSWORD, EMAIL_ADDRESS, EMAIL_PASSWORD, SECRET y EXPIRATION.
+- Levantar la base de datos MySQL y configurar las variables de `.env.sample`, incluyendo DB, JWT, refresh cookie y origen frontend.
 - Ejecutar la aplicación Spring Boot.
 - Tener al menos una cuenta ADMIN inicial. Como el endpoint /api/auth/register está protegido, el primer ADMIN debe existir previamente por seed, carga manual o base ya preparada.
 - En Postman, crear una variable token y enviar Authorization: Bearer {{token}} en todos los endpoints protegidos.
@@ -209,9 +209,9 @@ Utiliza multipart/form-data para permitir la carga de archivos desde el cliente 
 
 ## 1. Autenticación y cuentas
 
-- El usuario se autentica con POST /api/auth/login enviando identifier y password.
+- El cliente obtiene primero el CSRF en GET /api/auth/csrf y luego se autentica con POST /api/auth/login enviando identifier, password y `X-XSRF-TOKEN`.
 - El identifier puede ser usuario o email porque la búsqueda se realiza por user o email.
-- Si las credenciales son correctas, la API devuelve un token JWT que incluye el rol como authority ROLE_ADMIN, ROLE_STAFF o ROLE_EMPLOYEE.
+- Si las credenciales son correctas, la API devuelve un access JWT corto, `roles` y datos de sesion; el refresh token queda en una cookie HttpOnly.
 - Con el token activo se puede registrar una cuenta, cambiar email propio, cambiar contraseña propia o, si se es ADMIN, cambiar roles.
 
 ---
@@ -288,6 +288,7 @@ Utiliza multipart/form-data para permitir la carga de archivos desde el cliente 
 - El sistema valida empleado activo, fechas obligatorias, fecha final posterior a inicio, que la solicitud no sea posterior al inicio y que exista una anticipación mínima de 5 días hábiles.
 - También evita vacaciones superpuestas para el mismo empleado.
 - Permite listar por estado, rango de fechas, DNI del empleado y nombre completo.
+- Una cuenta autenticada con empleado vinculado consulta solo sus propias solicitudes desde `/api/vacations/me`, con paginación y filtros por estado o rango de fechas.
 
 ---
 
@@ -321,6 +322,7 @@ Endpoints paginados actuales:
 - GET /api/licenses
 - GET /api/payrolls
 - GET /api/vacations
+- GET /api/vacations/me
 
 ---
 
@@ -328,25 +330,43 @@ Endpoints paginados actuales:
 
 ## Auth
 
+### GET /api/auth/csrf
+
+Devuelve una representacion XOR enmascarada del token que debe enviarse sin modificar como `X-XSRF-TOKEN` al invocar login, refresh o logout desde un navegador o cliente manual. Es normal que no coincida visualmente con el valor base almacenado en la cookie `XSRF-TOKEN`; el backend lo desenmascara durante la validacion.
+
 ### POST /api/auth/login
 
 Permite iniciar sesión en el sistema enviando identifier y password.
 
 El identifier puede corresponder al usuario o al email de la cuenta.
 
-Si las credenciales son correctas, el sistema devuelve un token JWT que luego se utiliza para acceder a los endpoints protegidos.
+Si las credenciales son correctas, el sistema devuelve `accessToken`, `tokenType`, `expiresInSeconds`, `identifier`, `roles` y `mustChangePassword`; tambien crea una cookie HttpOnly con el refresh token.
+
+### POST /api/auth/refresh
+
+Rota la cookie de refresh y devuelve un nuevo access token. Reutilizar un refresh token ya rotado revoca la familia activa.
+
+### POST /api/auth/logout
+
+Revoca la familia de refresh tokens y elimina la cookie.
 
 ### POST /api/auth/register
 
 Permite registrar nuevas cuentas dentro del sistema.
 
-Este endpoint está disponible únicamente para usuarios con rol ADMIN o STAFF.
+Este endpoint está disponible únicamente para usuarios con rol ADMIN.
 
 Al registrar una cuenta, la contraseña se guarda encriptada por seguridad.
 
 ---
 
 ## Account
+
+### GET /api/accounts/me
+
+Devuelve `email`, `user` y `rol` de la cuenta asociada al token autenticado.
+
+No recibe IDs ni identificadores externos, por lo que siempre consulta la cuenta actual.
 
 ### PATCH /api/accounts/me/email
 
@@ -654,6 +674,12 @@ Anula una liquidación mientras su período siga abierto.
 
 ## Vacation
 
+### GET /api/vacations/me
+
+Lista en formato paginado las vacaciones del empleado vinculado a la cuenta autenticada.
+
+Permite aplicar filtros por estado y rango de fechas sin aceptar un identificador de otro empleado.
+
 ### GET /api/vacations
 
 Lista las vacaciones registradas en formato paginado.
@@ -788,7 +814,7 @@ Permite iniciar sesión en el sistema.
 
 Se envía el identifier y la contraseña.
 
-Si los datos son correctos, la API devuelve un token JWT.
+Si los datos son correctos, la API devuelve un access JWT y guarda el refresh token en una cookie HttpOnly rotativa.
 
 Body:
 
@@ -809,7 +835,7 @@ Endpoint: /api/auth/register
 
 Permite registrar una nueva cuenta dentro del sistema.
 
-Este endpoint está disponible para usuarios con rol ADMIN o STAFF.
+Este endpoint está disponible unicamente para usuarios con rol ADMIN.
 
 Body:
 
@@ -1162,6 +1188,26 @@ description = Certificado médico
 
 ```text
 file = archivo.pdf
+```
+
+---
+
+## Consultar cuenta propia
+
+M�todo: GET
+
+Endpoint: /api/accounts/me
+
+Devuelve los datos p�blicos de la cuenta autenticada sin exponer la contrase�a.
+
+Respuesta:
+
+```json
+{
+  "email": "employee.demo@hiverh.com",
+  "user": "employee.demo",
+  "rol": "EMPLOYEE"
+}
 ```
 
 ---

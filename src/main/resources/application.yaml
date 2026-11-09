@@ -41,6 +41,15 @@ server:
   forward-headers-strategy: framework
 
 hiverh:
+  auth:
+    refresh-token-expiration-ms: ${REFRESH_EXPIRATION:28800000}
+    refresh-cookie:
+      name: ${REFRESH_COOKIE_NAME:hiverh_refresh}
+      path: /api/auth
+      secure: ${REFRESH_COOKIE_SECURE:true}
+      same-site: ${REFRESH_COOKIE_SAME_SITE:Strict}
+    cors:
+      allowed-origins: ${FRONTEND_ORIGINS:http://localhost:4200}
   demo-cleanup:
     enabled: ${DEMO_CLEANUP_ENABLED:false}
     daily-cron: "${DEMO_CLEANUP_DAILY_CRON:0 0 4 * * *}"

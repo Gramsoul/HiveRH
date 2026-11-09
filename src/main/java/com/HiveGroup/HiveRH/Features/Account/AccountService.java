@@ -1,5 +1,6 @@
 package com.HiveGroup.HiveRH.Features.Account;
 
+import com.HiveGroup.HiveRH.Common.Security.Auth.RefreshTokenService;
 import com.HiveGroup.HiveRH.Common.Utils.Enums.RolEnum;
 import com.HiveGroup.HiveRH.Common.Utils.Exceptions.EntityNotFoundException;
 import com.HiveGroup.HiveRH.Features.Account.DTO.NewAccountDTO;
@@ -20,6 +21,7 @@ public class AccountService {
     private AccountRepository accountRepository;
     private AccountMapper accountMapper;
     private PasswordEncoder passwordEncoder;
+    private RefreshTokenService refreshTokenService;
 
 
     @Transactional(readOnly = true)
@@ -30,6 +32,23 @@ public class AccountService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public ResponseAccountDTO findCurrent() {
+        return accountMapper.toResponse(getCurrentAccount());
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseAccountDTO findByUser(String user) {
+        if (user == null || user.isBlank()) {
+            throw new IllegalArgumentException("El usuario es obligatorio");
+        }
+
+        AccountEntity account = accountRepository.findByUser(user)
+                .orElseThrow(() -> new EntityNotFoundException("Cuenta inexistente", "AccountEntity"));
+
+        return accountMapper.toResponse(account);
+    }
+
     public ResponseAccountDTO save(NewAccountDTO newAccountDTO){
         validateCanCreateRole(newAccountDTO.rol());
 
@@ -37,11 +56,13 @@ public class AccountService {
         entity.setPassword(
                 passwordEncoder.encode(entity.getPassword())
         );
+        entity.setMustChangePassword(false);
         accountRepository.save(entity);
 
         return accountMapper.toResponse(entity);
     }
 
+    @Transactional
     public ResponseAccountDTO updateRole(String identifier, RolEnum rol) {
         if (rol == null) {
             throw new IllegalArgumentException("El rol es obligatorio");
@@ -53,10 +74,12 @@ public class AccountService {
                 .orElseThrow(() -> new EntityNotFoundException("Cuenta inexistente", "AccountEntity"));
         account.setRol(rol);
         accountRepository.save(account);
+        refreshTokenService.revokeAllForAccount(account);
 
         return accountMapper.toResponse(account);
     }
 
+    @Transactional
     public ResponseAccountDTO updateCurrentEmail(String email) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("El email es obligatorio");
@@ -65,10 +88,12 @@ public class AccountService {
         AccountEntity account = getCurrentAccount();
         account.setEmail(email);
         accountRepository.save(account);
+        refreshTokenService.revokeAllForAccount(account);
 
         return accountMapper.toResponse(account);
     }
 
+    @Transactional
     public ResponseAccountDTO updateCurrentPassword(String currentPassword, String newPassword) {
 
         AccountEntity account = getCurrentAccount();
@@ -90,8 +115,10 @@ public class AccountService {
         }
 
         account.setPassword(passwordEncoder.encode(newPassword));
+        account.setMustChangePassword(false);
 
         accountRepository.save(account);
+        refreshTokenService.revokeAllForAccount(account);
 
         return accountMapper.toResponse(account);
     }
